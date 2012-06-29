@@ -174,9 +174,9 @@ public class Fusim {
         for(FusionGene f : fusions) {
             //out.println(f);
             if(cmd.hasOption("t") && "fasta".equalsIgnoreCase(cmd.getOptionValue("t"))) {
-                out.println(f.genFASTA(referenceFile));
+                out.println(f.genFASTA(referenceFile, cmd.hasOption("c")));
             } else {
-                out.println(f.genTXT());
+                out.println(f.genTXT(cmd.hasOption("c")));
             }
         }
         out.flush();
@@ -227,6 +227,11 @@ public class Fusim {
                              .withDescription("Format of output [fasta|txt]")
                              .hasArg()
                              .create("t")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("cds")
+                             .withDescription("Only include CDS exons")
+                             .create("c")
             );
     }
 

@@ -31,13 +31,13 @@ public class FusionGene {
         this.gene2 = gene2;
     }
     
-    public String genFASTA(File reference) {
+    public String genFASTA(File reference, boolean cdsExonsOnly) {
         
         // First half of gene 1
-        int[] break1 = gene1.generateExonBreak(true);
+        int[] break1 = gene1.generateExonBreak(true, cdsExonsOnly);
         
         // Second half of gene2
-        int[] break2 = gene2.generateExonBreak(false);
+        int[] break2 = gene2.generateExonBreak(false, cdsExonsOnly);
         
         ExtractSeq extractSeq = new ExtractSeq(reference);
 
@@ -49,7 +49,7 @@ public class FusionGene {
         
         StringBuffer break1seq = new StringBuffer();
         for(int i = 0; i < break1.length; i++) {
-            int[] exon = gene1.getCodingExons().get(break1[i]);
+            int[] exon = gene1.getExons(cdsExonsOnly).get(break1[i]);
             fasta.append((exon[0]+1)+"-"+exon[1]);
             if(i != (break1.length-1)) fasta.append(",");
             break1seq.append(extractSeq.fetch(gene1.getChrom(), gene1.getStrand(), exon[0]+1, exon[1]));
@@ -61,7 +61,7 @@ public class FusionGene {
         
         StringBuffer break2seq = new StringBuffer();
         for(int i = 0; i < break2.length; i++) {
-            int[] exon = gene2.getCodingExons().get(break2[i]);
+            int[] exon = gene2.getExons(cdsExonsOnly).get(break2[i]);
             fasta.append((exon[0]+1)+"-"+exon[1]);
             if(i != (break2.length-1)) fasta.append(",");
             break2seq.append(extractSeq.fetch(gene2.getChrom(), gene2.getStrand(), exon[0]+1, exon[1]));
@@ -80,13 +80,13 @@ public class FusionGene {
         return fasta.toString();
     }
     
-    public String genTXT() {
+    public String genTXT(boolean cdsExonsOnly) {
         
         // First half of gene 1
-        int[] break1 = gene1.generateExonBreak(true);
+        int[] break1 = gene1.generateExonBreak(true, cdsExonsOnly);
         
         // Second half of gene2
-        int[] break2 = gene2.generateExonBreak(false);
+        int[] break2 = gene2.generateExonBreak(false, cdsExonsOnly);
 
         StringBuffer txt = new StringBuffer();
         
@@ -98,7 +98,7 @@ public class FusionGene {
                 }, "\t"));
         
         for(int i = 0; i < break1.length; i++) {
-            int[] exon = gene1.getCodingExons().get(break1[i]);
+            int[] exon = gene1.getExons(cdsExonsOnly).get(break1[i]);
             txt.append((exon[0]+1)+"-"+exon[1]);
             if(i != (break1.length-1)) txt.append(",");
         }
@@ -108,7 +108,7 @@ public class FusionGene {
                 gene2.getChrom()+":"
                 }, "\t"));
         for(int i = 0; i < break2.length; i++) {
-            int[] exon = gene2.getCodingExons().get(break2[i]);
+            int[] exon = gene2.getExons(cdsExonsOnly).get(break2[i]);
             txt.append((exon[0]+1)+"-"+exon[1]);
             if(i != (break2.length-1)) txt.append(",");
         }

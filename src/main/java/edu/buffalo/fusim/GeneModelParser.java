@@ -45,7 +45,7 @@ public class GeneModelParser {
             //if(f!=null && f.getCodingExons().size() == 0) System.out.println(f.getTranscriptId());
             if(f != null && ("NR_002206".equals(f.getTranscriptId()) ||   "NR_026911".equals(f.getTranscriptId()))) {
                 System.out.print(f);
-                System.out.println(Arrays.toString(f.generateExonBreak(false)));
+                System.out.println(Arrays.toString(f.generateExonBreak(false, true)));
             } 
         }
     }

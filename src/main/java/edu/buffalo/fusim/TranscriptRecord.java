@@ -45,6 +45,7 @@ public class TranscriptRecord {
     private int[] exonFrames;
     private String geneId;
     private List<int []> codingExons;
+    private List<int []> exons;
 
     private TranscriptRecord() {
 
@@ -71,26 +72,18 @@ public class TranscriptRecord {
             record.exonStarts = TranscriptRecord.toIntArray(fields[9]);
             record.exonEnds = TranscriptRecord.toIntArray(fields[10]);
             record.exonFrames = TranscriptRecord.toIntArray(fields[15]);
-
-            //if("-".equals(record.strand)) {
-            //    ArrayUtils.reverse(record.exonStarts);
-            //    ArrayUtils.reverse(record.exonEnds);
-            //    ArrayUtils.reverse(record.exonFrames);
-            //}
-
             record.exonBases = 0;
-
-            for(int i = 0; i < record.exonStarts.length; i++) {
-                record.exonBases += record.exonEnds[i]-record.exonStarts[i];
-            }
-            
-            // Compute coding exons
+            record.exons = new ArrayList<int []>();
             record.codingExons = new ArrayList<int []>();
 
             for(int i = 0; i < record.exonStarts.length; i++) {
                 int start = record.exonStarts[i];
                 int end = record.exonEnds[i];
                 
+                record.exonBases += end-start;
+                record.exons.add(new int[]{start,end});
+                
+                // Compute coding exons
                 if(start > record.cdsEnd) continue;
                 if(end < record.cdsStart) continue; 
 
@@ -118,27 +111,37 @@ public class TranscriptRecord {
         return this.codingExons;
     }
     
-    public int[] generateExonBreak(boolean keepFirstHalf) {
-        if(codingExons.size() == 0) {
-            throw new RuntimeException("Missing coding exons: \n"+this.toString());
+    public List<int []> getExons() {
+        return this.exons;
+    }
+    
+    public List<int []> getExons(boolean cdsExonsOnly) {
+        return cdsExonsOnly ? this.codingExons : this.exons;
+    }
+    
+    public int[] generateExonBreak(boolean keepFirstHalf, boolean cdsExonsOnly) {
+        List<int []> exonList = cdsExonsOnly ? this.codingExons : this.exons;
+        
+        if(exonList.size() == 0) {
+            throw new RuntimeException("Missing exons: \n"+this.toString());
         }
         
         Random r = new Random();
-        int breakIndex = r.nextInt(codingExons.size());
+        int breakIndex = r.nextInt(exonList.size());
         
         int start = 0;
         int end = breakIndex;
         
         if(!keepFirstHalf) {
             start = breakIndex;
-            end = codingExons.size()-1;
+            end = exonList.size()-1;
         }
         
         int[] exonIndicies = new int[(end-start)+1];
         
         int j = 0;
         for(int i = start; i <= end; i++) {
-            exonIndicies[j++] = "-".equals(strand) ? ((codingExons.size()-1)-i) : i;
+            exonIndicies[j++] = "-".equals(strand) ? ((exonList.size()-1)-i) : i;
         }
         
         if("-".equals(strand)) ArrayUtils.reverse(exonIndicies);
