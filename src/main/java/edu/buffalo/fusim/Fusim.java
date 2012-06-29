@@ -124,12 +124,21 @@ public class Fusim {
         }
 
         
-        int nFusions = 50;
+        int nFusions = 10;
         if(cmd.hasOption("n")) {
             try {
                 nFusions = Integer.parseInt(cmd.getOptionValue("n"));
             } catch(NumberFormatException e) {
-                printHelpAndExit(options, "Number of fusions (n) must be a number");
+                printHelpAndExit(options, "Number of fusions (-n) must be a number");
+            }
+        }
+        
+        int nReadThrough = 0;
+        if(cmd.hasOption("x")) {
+            try {
+                nReadThrough = Integer.parseInt(cmd.getOptionValue("x"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Number of read through fusion genes (-x) must be a number");
             }
         }
         
@@ -178,6 +187,12 @@ public class Fusim {
         double totalTime = ((tend - tstart)/1000);
         logger.info("Total processing time: " + totalTime + "s");
         
+        // Generate any read through fusion genes
+        if(nReadThrough > 0) {
+            ReadThroughGenerator rt = new ReadThroughGenerator();
+            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough);
+            fusions.addAll(rtFusions);
+        }
         
         if(textOutput != null) {
             textOutput.println(StringUtils.join(FusionGene.getHeader(), "\t"));
@@ -200,6 +215,8 @@ public class Fusim {
                 fastaOutput.println(f.genFASTA(break1, break2, referenceFile, cmd.hasOption("c")));
             }
         }
+        
+ 
         
         if(textOutput != null) textOutput.flush();
         if(fastaOutput != null) fastaOutput.flush();
@@ -254,6 +271,12 @@ public class Fusim {
                 OptionBuilder.withLongOpt("cds")
                              .withDescription("Only include CDS exons")
                              .create("c")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("readthrough")
+                             .withDescription("Number of read through fusion genes")
+                             .hasArg()
+                             .create("x")
             );
     }
 
