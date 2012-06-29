@@ -54,14 +54,15 @@ public class TranscriptRecord {
 
     }
 
-    public static TranscriptRecord fromGeneModel(String[] fields) throws GTFParseException {
-        if (fields.length != 16)
+    public static TranscriptRecord fromRefFlat(String[] fields) throws GTFParseException {
+        if (fields.length != 11)
             throw new RuntimeException(
                     "Invalid RefGene file. records should have 16 fields but found only: "
                             + fields.length);
         
         TranscriptRecord record = new TranscriptRecord();
 
+        record.geneId = fields[0];
         record.transcriptId = fields[1];
         record.chrom = fields[2];
         record.strand = Strand.fromString(fields[3]);
@@ -74,7 +75,7 @@ public class TranscriptRecord {
             record.exonCount = Integer.valueOf(fields[8]);
             record.exonStarts = TranscriptRecord.toIntArray(fields[9]);
             record.exonEnds = TranscriptRecord.toIntArray(fields[10]);
-            record.exonFrames = TranscriptRecord.toIntArray(fields[15]);
+            //record.exonFrames = TranscriptRecord.toIntArray(fields[15]);
             record.exonBases = 0;
             record.exons = new ArrayList<int []>();
             record.codingExons = new ArrayList<int []>();
@@ -104,8 +105,6 @@ public class TranscriptRecord {
             throw new GTFParseException(
                     "Invalid RefGene file. Can't parse integer value: ", e);
         }
-
-        record.geneId = fields[12];
         
         return record;
     }

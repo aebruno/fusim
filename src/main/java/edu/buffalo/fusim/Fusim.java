@@ -58,10 +58,10 @@ public class Fusim {
     public void run(String[] args) throws IOException, InterruptedException {
         buildOptions();
         
-        CommandLineParser parser = new PosixParser();
+        CommandLineParser clParser = new PosixParser();
         CommandLine cmd = null;
         try {
-            cmd = parser.parse(options, args);
+            cmd = clParser.parse(options, args);
         } catch (ParseException e) {
             printHelpAndExit(options, e.getMessage());
         }
@@ -171,12 +171,13 @@ public class Fusim {
         }
         logger.info("------------------------------------------------------------------------");
         
+        GeneModelParser parser = new UCSCRefFlatParser();
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile);
+            fg = new BackgroundGenerator(bamFile, parser);
         } else {
-            fg = new RandomGenerator();
+            fg = new RandomGenerator(parser);
         }
         
         long tstart = System.currentTimeMillis();
@@ -189,7 +190,7 @@ public class Fusim {
         
         // Generate any read through fusion genes
         if(nReadThrough > 0) {
-            ReadThroughGenerator rt = new ReadThroughGenerator();
+            ReadThroughGenerator rt = new ReadThroughGenerator(parser);
             List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough);
             fusions.addAll(rtFusions);
         }

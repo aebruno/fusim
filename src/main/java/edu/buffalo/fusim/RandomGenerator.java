@@ -28,8 +28,8 @@ import edu.buffalo.fusim.gtf.GTFParseException;
 public class RandomGenerator implements FusionGenerator {
     private GeneModelParser parser;
 
-    public RandomGenerator() {
-        this.parser = new GeneModelParser();
+    public RandomGenerator(GeneModelParser parser) {
+        this.parser = parser;
     }
 
     public List<FusionGene> generate(File gtfFile, int nFusions) {
@@ -76,7 +76,7 @@ public class RandomGenerator implements FusionGenerator {
     }
 
     public static void main(String[] args) throws Exception {
-        RandomGenerator g = new RandomGenerator();
+        RandomGenerator g = new RandomGenerator(new UCSCRefFlatParser());
         System.out.println(g.generate(new File("data/refGene.txt"), 1));
     }
 }

@@ -97,7 +97,9 @@ public class GTFParser {
         record.transcriptType = record.getAttribute("transcript_type");
         record.transcriptStatus = record.getAttribute("transcript_status");
         record.transcriptName = record.getAttribute("transcript_name");
-        record.level = Integer.valueOf(record.getAttribute("level"));
+        try {
+            record.level = Integer.valueOf(record.getAttribute("level"));
+        } catch(NumberFormatException ignored) { }
         
 
         return record;

@@ -49,8 +49,8 @@ public class BackgroundGenerator implements FusionGenerator {
     private ArrayBlockingQueue<TranscriptRecord> queue;
     private File backgroundFile;
 
-    public BackgroundGenerator(File backgroundFile) {
-        this.parser = new GeneModelParser();
+    public BackgroundGenerator(File backgroundFile, GeneModelParser parser) {
+        this.parser = parser;
         this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
         this.backgroundFile = backgroundFile;
     }

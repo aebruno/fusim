@@ -17,8 +17,8 @@ import edu.buffalo.fusim.gtf.GTFParseException;
 public class ReadThroughGenerator implements FusionGenerator {
     private GeneModelParser parser;
 
-    public ReadThroughGenerator() {
-        this.parser = new GeneModelParser();
+    public ReadThroughGenerator(GeneModelParser parser) {
+        this.parser = parser;
     }
         
     public List<FusionGene> generate(File gtfFile, int nFusions) {
@@ -96,7 +96,7 @@ public class ReadThroughGenerator implements FusionGenerator {
     }
     
     public static void main(String[] args) throws Exception {
-        ReadThroughGenerator g = new ReadThroughGenerator();
+        ReadThroughGenerator g = new ReadThroughGenerator(new UCSCRefFlatParser());
         System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1));
     }
 
