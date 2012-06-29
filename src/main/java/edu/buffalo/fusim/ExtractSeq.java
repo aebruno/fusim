@@ -20,7 +20,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.picard.PicardException;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;

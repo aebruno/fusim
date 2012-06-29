@@ -19,7 +19,6 @@ package edu.buffalo.fusim;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.List;
@@ -71,15 +70,8 @@ public class Fusim {
             printHelpAndExit(options);
         }
         
-        if(cmd.hasOption("t")) {
-            if(!"txt".equalsIgnoreCase(cmd.getOptionValue("t")) && !"fasta".equalsIgnoreCase(cmd.getOptionValue("t"))) {
-                printHelpAndExit(options, "Invalid output format type. Must be txt or fasta.");
-            }
-        }
-        
-        File outputFile = null;
-        if(cmd.hasOption("o")) {
-            outputFile = new File(cmd.getOptionValue("o"));
+        if(!cmd.hasOption("g")) {
+            printHelpAndExit(options, "Please specify a path to a gene model file with option -g.");
         }
         
         File geneModelFile = new File(cmd.getOptionValue("g"));
@@ -87,10 +79,32 @@ public class Fusim {
             printHelpAndExit(options, "Please provide a valid Gene Model file");
         }
         
-        if("fasta".equalsIgnoreCase(cmd.getOptionValue("t")) && !cmd.hasOption("r")) {
-            printHelpAndExit(options, "missing option \"-r\". You must provide a genome reference file for FASTA output");
+        PrintWriter textOutput = null;
+        if(cmd.hasOption("t")) {
+            if("-".equals(cmd.getOptionValue("t"))) {
+                textOutput = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
+            } else {
+                textOutput = new PrintWriter(new OutputStreamWriter(new FileOutputStream(cmd.getOptionValue("t")), "UTF-8"));
+            }
+        } 
+        
+        PrintWriter fastaOutput = null;
+        if(cmd.hasOption("f")) {
+            if("-".equals(cmd.getOptionValue("f"))) {
+                fastaOutput = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
+            } else {
+                fastaOutput = new PrintWriter(new OutputStreamWriter(new FileOutputStream(cmd.getOptionValue("f")), "UTF-8"));
+            }
         }
         
+        // Default to TXT output
+        if(fastaOutput == null && textOutput == null) {
+            textOutput = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
+        }
+        
+        if(cmd.hasOption("f") && !cmd.hasOption("r")) {
+            printHelpAndExit(options, "You must provide an indexed (.fai) genome reference file for FASTA output using option \"-r\".");
+        }
 
         File referenceFile = null;
         
@@ -98,11 +112,11 @@ public class Fusim {
             referenceFile = new File(cmd.getOptionValue("r"));
         }
         
-        if("fasta".equalsIgnoreCase(cmd.getOptionValue("t")) && !referenceFile.canRead()) {
+        if(cmd.hasOption("f") && !referenceFile.canRead()) {
             printHelpAndExit(options, "Please provide a valid reference file in fasta format");
         } 
         
-        if("fasta".equalsIgnoreCase(cmd.getOptionValue("t"))) {
+        if(cmd.hasOption("f")) {
             File referenceIndexFile = new File(referenceFile.getAbsolutePath() + ".fai");
             if(!referenceIndexFile.canRead()) {
                 fatalError("Missing index file. Please index your fasta file with: samtools faidx my_genome.fa");
@@ -140,8 +154,11 @@ public class Fusim {
         if(cmd.hasOption("n")) {
             logger.info("Total number of generated fusions: "+nFusions);
         }
-        if(cmd.hasOption("o")) {
-            logger.info("Output file: "+outputFile.getAbsolutePath());
+        if(cmd.hasOption("t")) {
+            logger.info("Text Output file: "+cmd.getOptionValue("t"));
+        }
+        if(cmd.hasOption("f")) {
+            logger.info("Fasta Output file: "+cmd.getOptionValue("f"));
         }
         logger.info("------------------------------------------------------------------------");
         
@@ -162,24 +179,30 @@ public class Fusim {
         logger.info("Total processing time: " + totalTime + "s");
         
         
-        OutputStream ostream = null;
-        if(cmd.hasOption("o")) {
-            ostream = new FileOutputStream(outputFile);
-        } else {
-            ostream = System.out;
+        if(textOutput != null) {
+            textOutput.println(StringUtils.join(FusionGene.getHeader(), "\t"));
         }
         
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(ostream, "UTF-8"));
-        out.println(StringUtils.join(FusionGene.getHeader(), "\t"));
         for(FusionGene f : fusions) {
             //out.println(f);
-            if(cmd.hasOption("t") && "fasta".equalsIgnoreCase(cmd.getOptionValue("t"))) {
-                out.println(f.genFASTA(referenceFile, cmd.hasOption("c")));
-            } else {
-                out.println(f.genTXT(cmd.hasOption("c")));
+            
+            // First half of gene 1
+            int[] break1 = f.getGene1().generateExonBreak(true, cmd.hasOption("c"));
+            
+            // Second half of gene2
+            int[] break2 = f.getGene2().generateExonBreak(false, cmd.hasOption("c"));
+            
+            if(textOutput != null) {
+                textOutput.println(f.genTXT(break1, break2, cmd.hasOption("c")));
+            }
+            
+            if(fastaOutput != null) {
+                fastaOutput.println(f.genFASTA(break1, break2, referenceFile, cmd.hasOption("c")));
             }
         }
-        out.flush();
+        
+        if(textOutput != null) textOutput.flush();
+        if(fastaOutput != null) fastaOutput.flush();
     }
     
     @SuppressWarnings("static-access")
@@ -195,7 +218,6 @@ public class Fusim {
             OptionBuilder.withLongOpt("genemodel")
                          .withDescription("Gene Model file")
                          .hasArg()
-                         .isRequired()
                          .create("g")
         );
         options.addOption(
@@ -211,22 +233,22 @@ public class Fusim {
                              .create("b")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("out")
-                             .withDescription("Output file")
-                             .hasArg()
-                             .create("o")
-            );
-        options.addOption(
                 OptionBuilder.withLongOpt("fusions")
                              .withDescription("Total number of fusions to generate")
                              .hasArg()
                              .create("n")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("type")
-                             .withDescription("Format of output [fasta|txt]")
+                OptionBuilder.withLongOpt("text")
+                             .withDescription("File name of text output")
                              .hasArg()
                              .create("t")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("fasta")
+                             .withDescription("File name of fasta output")
+                             .hasArg()
+                             .create("f")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("cds")
