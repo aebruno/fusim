@@ -1,0 +1,11 @@
+The binary release of fusim includes software developed by:
+
+- The Apache Software Foundation (http://www.apache.org/). Released under the
+  Apache 2.0 license.
+
+- The Broad Institute (http://picard.sourceforge.net/). Released under the MIT
+  license.
+
+- CERN - European Organization for Nuclear Research (Colt library). Released
+  under the Colt License Agreement
+  (http://acs.lbl.gov/software/colt/colt-download/releases/license.html)

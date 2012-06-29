@@ -1,0 +1,80 @@
+===============================================================================
+Fusim - FUSion SIMulator
+===============================================================================
+
+Fusim is a program to simulate fusion genes from a reference genome. 
+
+---------------------
+Requirements
+---------------------
+
+- Java
+- UCSC RefGene model
+- Reference genome in fasta
+- samtools (for indexing only)
+
+---------------------
+Setup
+---------------------
+
+1. Download UCSC RefGene models:
+
+  $ wget -O refGene.txt.gz http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.txt
+  $ gunzip refGene.txt.gz
+
+
+2. Download genome reference from UCSC:
+
+  $ wget ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
+
+3. Extract and build one single fasta file:
+
+  $ tar -xzf chromFa.tar.gz
+  $ cat chr*.fa > hg19.fa
+
+4. Index with samtools:
+
+  $ samtools faidx hg19.fa
+
+
+---------------------
+Basic Usage
+---------------------
+
+$ java -jar fusim.jar 
+usage: fusim
+-b,--bam <arg>         Background BAM file
+-g,--genemodel <arg>   Gene Model file
+-h,--help              print usage info
+-n,--fusions <arg>     Total number of fusions to generate
+-o,--out <arg>         Output file
+-r,--reference <arg>   Reference genome (fasta)
+-t,--type <arg>        Format of output [fasta|txt]
+
+
+- Generate a single Fusion gene using UCSC refGene.txt model:
+
+  $ java -jar fusim.jar -g refGene.txt -n 1
+
+- Generate 100 Fusion genes using UCSC refGene.txt model:
+
+  $ java -jar fusim.jar -g refGene.txt -n 100
+
+- Generate 10 Fusion genes using UCSC refGene.txt model and a background
+  dataset (BAM file):
+
+  $ java -jar fusim.jar -g refGene.txt -n 100 -b background-reads.bam
+
+- Generate 10 Fusion genes and their sequences in FASTA format:
+
+  $ java -jar fusim.jar -g refGene.txt -n 100 -t fasta -r hg19.fa
+
+---------------------
+Authors
+---------------------
+
+- Andrew E. Bruno
+- Song Lui
+- Jianmin Wang
+- Jeffrey C. Miecznikowski
+

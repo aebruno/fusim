@@ -1,0 +1,27 @@
+<assembly>
+  <id>${project.version}-bin</id>
+  <baseDirectory>fusim-${project.version}</baseDirectory>
+  <formats>
+    <format>zip</format>
+    <format>tar.gz</format>
+  </formats>
+  <fileSets>
+    <fileSet>
+      <directory>${basedir}</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>README</include>
+        <include>LICENSE</include>
+        <include>NOTICE</include>
+        <include>ChangeLog</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>${basedir}/target/fusim-uber.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>fusim.jar</destName>
+    </file>
+  </files>
+</assembly>
