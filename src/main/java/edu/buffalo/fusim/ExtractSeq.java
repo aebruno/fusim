@@ -28,6 +28,8 @@ import net.sf.samtools.util.SequenceUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.buffalo.fusim.gtf.Strand;
+
 public class ExtractSeq {
     private static Log logger = LogFactory.getLog(ExtractSeq.class);
     
@@ -49,13 +51,13 @@ public class ExtractSeq {
         this.ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(path); 
     }
     
-    public String fetch(String chrom, String strand, int start, int stop) {
+    public String fetch(String chrom, Strand strand, int start, int stop) {
         //logger.info("Fetching sequence contig: "+chrom+":"+start+"-"+stop+" "+strand);
         StringBuilder buff = new StringBuilder();
         
         ReferenceSequence seq = ref.getSubsequenceAt(chrom, start, stop);
         byte[] bases = seq.getBases();
-        if ("-".equals(strand)) SequenceUtil.reverseComplement(bases);
+        if (Strand.REVERSE.equals(strand)) SequenceUtil.reverseComplement(bases);
             
         for (int i=0; i<bases.length; ++i) {
             buff.append((char)bases[i]);
@@ -77,7 +79,7 @@ public class ExtractSeq {
     
     public static void main(String[] args) {
         ExtractSeq s = new ExtractSeq(new File("data/hg19.fa"));
-        System.out.println(s.fetch("chr17", "+", 76210398, 76210508));
+        System.out.println(s.fetch("chr17", Strand.FORWARD, 76210398, 76210508));
         
         StringBuffer buf = new StringBuffer("ACTG");
         System.out.println(ExtractSeq.reverseComplement(buf).toString());

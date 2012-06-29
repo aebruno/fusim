@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 
 import cern.colt.list.IntArrayList;
 import cern.jet.random.sampling.RandomSamplingAssistant;
+import edu.buffalo.fusim.gtf.GTFParseException;
 
 public class BackgroundGenerator implements FusionGenerator {
     private Log logger = LogFactory.getLog(BackgroundGenerator.class);
@@ -194,6 +195,9 @@ public class BackgroundGenerator implements FusionGenerator {
                         queue.put(feature);
                     } catch (InterruptedException e) {
                         log.fatal("InterruptedException while adding to queue: "
+                                + e.getMessage());
+                    } catch(GTFParseException e) {
+                        log.fatal("Failed to parse gene model line: "
                                 + e.getMessage());
                     }
                 }

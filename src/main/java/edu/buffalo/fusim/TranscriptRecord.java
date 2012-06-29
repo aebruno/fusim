@@ -23,6 +23,9 @@ import java.util.Random;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import edu.buffalo.fusim.gtf.GTFParseException;
+import edu.buffalo.fusim.gtf.Strand;
+
 /**
  * Class to encapsulate a Transcript Record from a Gene Model
  * 
@@ -33,7 +36,7 @@ public class TranscriptRecord {
 
     private String transcriptId;
     private String chrom;
-    private String strand;
+    private Strand strand;
     private int txStart;
     private int txEnd;
     private int cdsStart;
@@ -51,7 +54,7 @@ public class TranscriptRecord {
 
     }
 
-    public static TranscriptRecord fromGeneModel(String[] fields) {
+    public static TranscriptRecord fromGeneModel(String[] fields) throws GTFParseException {
         if (fields.length != 16)
             throw new RuntimeException(
                     "Invalid RefGene file. records should have 16 fields but found only: "
@@ -61,7 +64,7 @@ public class TranscriptRecord {
 
         record.transcriptId = fields[1];
         record.chrom = fields[2];
-        record.strand = fields[3];
+        record.strand = Strand.fromString(fields[3]);
 
         try {
             record.txStart = Integer.valueOf(fields[4]);
@@ -98,7 +101,7 @@ public class TranscriptRecord {
                 }
             }
         } catch (NumberFormatException e) {
-            throw new RuntimeException(
+            throw new GTFParseException(
                     "Invalid RefGene file. Can't parse integer value: ", e);
         }
 
@@ -141,10 +144,10 @@ public class TranscriptRecord {
         
         int j = 0;
         for(int i = start; i <= end; i++) {
-            exonIndicies[j++] = "-".equals(strand) ? ((exonList.size()-1)-i) : i;
+            exonIndicies[j++] = Strand.REVERSE.equals(strand) ? ((exonList.size()-1)-i) : i;
         }
         
-        if("-".equals(strand)) ArrayUtils.reverse(exonIndicies);
+        if(Strand.REVERSE.equals(strand)) ArrayUtils.reverse(exonIndicies);
         
         return exonIndicies;
     }
@@ -187,7 +190,7 @@ public class TranscriptRecord {
         return chrom;
     }
 
-    public String getStrand() {
+    public Strand getStrand() {
         return strand;
     }
 

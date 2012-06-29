@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import edu.buffalo.fusim.gtf.GTFParseException;
+
 public class RandomGenerator implements FusionGenerator {
     private GeneModelParser parser;
 
@@ -56,7 +58,11 @@ public class RandomGenerator implements FusionGenerator {
         TranscriptRecord record = null;
         for (int tries = 0; tries < 5; tries++) {
             String line = raf.readLine();
-            record = parser.parseLine(line);
+            try {
+                record = parser.parseLine(line);
+            } catch (GTFParseException e) {
+                // XXX ignored for now;
+            }
             if (record != null)
                 break;
         }

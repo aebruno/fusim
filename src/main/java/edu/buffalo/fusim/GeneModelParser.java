@@ -21,12 +21,10 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
 import cern.colt.Arrays;
+import edu.buffalo.fusim.gtf.GTFParseException;
 
 public class GeneModelParser {
-    public TranscriptRecord parseLine(String line) {
-        if (line == null || line.startsWith("#"))
-            return null;
-
+    public TranscriptRecord parseLine(String line) throws GTFParseException {
         String[] fields = line.split("\t");
         TranscriptRecord record = TranscriptRecord.fromGeneModel(fields);
 

@@ -79,7 +79,7 @@ public class FusionGene {
         txt.append(gene1.getGeneId()+"-"+gene2.getGeneId()+"\t");
         
         txt.append(StringUtils.join(new String[]{
-                gene1.getTranscriptId(), gene1.getGeneId(), StringUtils.join(ArrayUtils.toObject(break1), ","), gene1.getStrand(),
+                gene1.getTranscriptId(), gene1.getGeneId(), StringUtils.join(ArrayUtils.toObject(break1), ","), gene1.getStrand().toString(),
                 gene1.getChrom()+":"
                 }, "\t"));
         
@@ -90,7 +90,7 @@ public class FusionGene {
         }
         txt.append("\t");
         txt.append(StringUtils.join(new String[]{
-                gene2.getTranscriptId(), gene2.getGeneId(), StringUtils.join(ArrayUtils.toObject(break2), ","), gene2.getStrand(),
+                gene2.getTranscriptId(), gene2.getGeneId(), StringUtils.join(ArrayUtils.toObject(break2), ","), gene2.getStrand().toString(),
                 gene2.getChrom()+":"
                 }, "\t"));
         for(int i = 0; i < break2.length; i++) {

@@ -12,6 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
+import edu.buffalo.fusim.gtf.GTFParseException;
+
 public class ReadThroughGenerator implements FusionGenerator {
     private GeneModelParser parser;
 
@@ -59,7 +61,7 @@ public class ReadThroughGenerator implements FusionGenerator {
     
     protected class TranscriptCompare implements Comparator<TranscriptRecord> {
         
-        // Sorty by Chrom then txStart
+        // Sort by Chrom then txStart
         public int compare(TranscriptRecord o1, TranscriptRecord o2) {
             int res = o1.getChrom().compareTo(o2.getChrom());
             if (res != 0) return res;
@@ -86,6 +88,8 @@ public class ReadThroughGenerator implements FusionGenerator {
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read gene modle file", e);
+        } catch (GTFParseException e) {
+            throw new RuntimeException("Failed to parse gene model file", e);
         }
         
         return transcripts;
