@@ -28,38 +28,106 @@ public class GTF2RefFlat {
     private Map<String, TranscriptData> map;
     
     
+    /**
+     * This is a port of the mkFromGroupedGxf(..) function from genePred.c from 
+     * Kent source utilities
+     * http://genomewiki.cse.ucsc.edu/index.php/Kent_source_utilities
+     */
     public void convert(File gtfFile, File outFile) throws IOException {
         map = new HashMap<String, TranscriptData>();
         buildMap(gtfFile);
         
         for(String id : map.keySet()) {
             TranscriptData data = map.get(id);
-            
-            // Skip transcripts without tx, cds, or exon data
-            if(data.getTx().size() == 0 && data.getCds().size() == 0) continue;
-            if(data.getExon().size() == 0) continue;
-            
-            Feature tx = null;
-            Feature cds = null;
-            if(data.getTx().size() > 0) {
-                tx = data.getTx().get(0);
-            }
-            if(data.getCds().size() > 0) {
-                cds = data.getCds().get(0);
-            }
-            
-            if(tx == null) tx = cds;
-            if(cds == null) cds = tx;
-            
-            Collections.sort(data.getExon(), new ExonCompare());
+            Collections.sort(data.getFeatures(), new FeatureCompare());
 
-            int[] exonStarts = new int[data.getExon().size()];
-            int[] exonEnds = new int[data.getExon().size()];
-            for(int i = 0; i < data.getExon().size(); i++) {
-                exonStarts[i] = data.getExon().get(i).getStart();
-                exonEnds[i] = data.getExon().get(i).getEnd();
+            int exonCount = 0;
+            int stopCodonStart = -1; 
+            int stopCodonEnd = -1;
+            int cdsStart = Integer.MAX_VALUE;
+            int cdsEnd = Integer.MIN_VALUE;
+            int txStart = Integer.MAX_VALUE;
+            int txEnd = Integer.MIN_VALUE;
+            boolean haveStartCodon = false;
+            boolean haveStopCodon = false;
+
+            for(Feature f : data.getFeatures()) {
+                if (txStart > f.getStart()) txStart = f.getStart();
+                if (txEnd < f.getEnd()) txEnd = f.getEnd();
+
+                if(FeatureType.EXON.equals(f.getFeatureType())) {
+                    exonCount++;
+                }
+                if(FeatureType.CDS.equals(f.getFeatureType())) {
+                    if (f.getStart() < cdsStart)
+                        cdsStart = f.getStart();
+                    if (f.getEnd() > cdsEnd)
+                        cdsEnd = f.getEnd();
+                }
+                if(FeatureType.START_CODON.equals(f.getFeatureType())) 
+                    haveStartCodon = true;
+                if(FeatureType.STOP_CODON.equals(f.getFeatureType()))  {
+                    /* stop_codon can be split, need bounds for adjusting CDS below */
+                    if ((stopCodonStart < 0) || (f.getStart() < stopCodonStart))
+                        stopCodonStart = f.getStart();
+                    if ((stopCodonEnd < 0) || (f.getEnd() > stopCodonEnd))
+                        stopCodonEnd = f.getEnd();
+
+                    haveStopCodon = true;
+                }
             }
+
+            if (exonCount == 0) continue;
+
+            if (cdsStart > cdsEnd) {
+                /* no cds annotated */
+                cdsStart = 0;
+                cdsEnd = 0;
+            } else if (stopCodonStart >= 0) {
+                /* adjust CDS to include stop codon as in GTF */
+                if (Strand.FORWARD.equals(data.getStrand())) {
+                    if (stopCodonEnd > cdsEnd) cdsEnd = stopCodonEnd;
+                } else {
+                    if (stopCodonStart < cdsStart) cdsStart = stopCodonStart;
+                }
+            }
+
+            if(cdsStart > cdsEnd) {
+                cdsStart = txStart;
+                cdsEnd = txEnd;
+            }
+
+            /* adjust tx range to include stop codon */
+            if (Strand.FORWARD.equals(data.getStrand()) && (txEnd == stopCodonStart))
+                 txEnd = stopCodonEnd;
+             else if (Strand.REVERSE.equals(data.getStrand()) && (txStart == stopCodonEnd))
+                 txStart = stopCodonStart;
             
+            int[] exonStarts = new int[exonCount];
+            int[] exonEnds = new int[exonCount];
+
+            int i = -1; /* before first exon */
+            /* fill in exons, merging overlaping and adjacent exons */
+            for(Feature f : data.getFeatures()) {
+                if(FeatureType.EXON.equals(f.getFeatureType()) || FeatureType.CDS.equals(f.getFeatureType())) {
+                    if ((i < 0) || (f.getStart() > exonEnds[i])) {
+                        /* start a new exon */
+                        ++i;
+                        assert(i < exonCount);
+                        exonStarts[i] = f.getStart();
+                        exonEnds[i] = f.getEnd();
+                    } else {
+                        /* overlap, extend exon, picking the largest of ends */
+                        assert(i < exonCount);
+                        assert(f.getStart() >= exonStarts[i]);
+                        if (f.getEnd() > exonEnds[i])
+                            exonEnds[i] = f.getEnd();
+                    }
+                }
+            }
+
+            exonCount = i+1;
+
             StringBuffer buf = new StringBuffer();
             
             buf.append(
@@ -68,11 +136,11 @@ public class GTF2RefFlat {
                     data.getTranscriptId(), 
                     data.getChrom(), 
                     data.getStrand().toString(),
-                    ""+tx.getStart(),
-                    ""+tx.getEnd(),
-                    ""+cds.getStart(),
-                    ""+cds.getEnd(),
-                    ""+data.getExon().size(),
+                    ""+txStart,
+                    ""+txEnd,
+                    ""+cdsStart,
+                    ""+cdsEnd,
+                    ""+exonCount,
                     StringUtils.join(ArrayUtils.toObject(exonStarts), ","),
                     StringUtils.join(ArrayUtils.toObject(exonEnds), ",")
             }, "\t"));
@@ -81,7 +149,7 @@ public class GTF2RefFlat {
         }
     }
     
-    protected class ExonCompare implements Comparator<Feature> {
+    protected class FeatureCompare implements Comparator<Feature> {
         public int compare(Feature o1, Feature o2) {
             return Double.compare(o1.getStart(), o2.getStart());
         }
@@ -104,14 +172,7 @@ public class GTF2RefFlat {
                     data = new TranscriptData(feature.getTranscriptId(), feature.getGeneId(), feature.getSeqname(), feature.getStrand());
                 }
                 
-                if(FeatureType.EXON.equals(feature.getFeatureType())) {
-                    data.addExon(feature);
-                } else if(FeatureType.CDS.equals(feature.getFeatureType())) {
-                    data.addCds(feature);
-                } else if(FeatureType.TRANSCRIPT.equals(feature.getFeatureType())) {
-                    data.addTx(feature);
-                }
-                
+                data.addFeature(feature);
                 map.put(feature.getTranscriptId(), data);
             }
         } catch (IOException e) {
@@ -130,9 +191,7 @@ public class GTF2RefFlat {
     
     
     private class TranscriptData {
-        private List<Feature> cds = new ArrayList<Feature>();
-        private List<Feature> exon = new ArrayList<Feature>();
-        private List<Feature> tx = new ArrayList<Feature>();
+        private List<Feature> features = new ArrayList<Feature>();
         private String transcriptId;
         private String geneId;
         private String chrom;
@@ -145,28 +204,12 @@ public class GTF2RefFlat {
             this.strand = strand;
         }
         
-        public void addCds(Feature f) {
-            cds.add(f);
+        public void addFeature(Feature f) {
+            features.add(f);
         }
 
-        public void addExon(Feature f) {
-            exon.add(f);
-        }
-
-        public void addTx(Feature f) {
-            tx.add(f);
-        }
-
-        public List<Feature> getCds() {
-            return cds;
-        }
-
-        public List<Feature> getExon() {
-            return exon;
-        }
-
-        public List<Feature> getTx() {
-            return tx;
+        public List<Feature> getFeatures() {
+            return features;
         }
 
         public String getTranscriptId() {
