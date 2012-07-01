@@ -2,6 +2,16 @@
 Fusim - ChangeLog
 ================================================================================
 
+- 2012-06-30
+	- Ported the mkFromGroupedGxf(..) function from Ken source utilities. The
+	  conversion should behave similiar to gtfToGenePred utility
+
 - 2012-06-29
-	
-	- Initial import of sources
+	- Re-factored GeneModelParser to use refFlat instead of refGene. Added a
+	  utility to convert GTF files to refFlat format.
+	- Added GTF parser. Updated code to use Strand enum.
+	- Implemented generation of read through fusion genes. Added option for
+	  specifying the number of read through fusion events to generate.
+	- Added output to both FASTA and TXT formats.
+	- Added option to include only CDS exons or all exons when generating
+	  fusion genes
