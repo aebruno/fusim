@@ -121,6 +121,10 @@ public class Fusim {
         if(fastaOutput == null && textOutput == null) {
             textOutput = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
         }
+
+        if(cmd.hasOption("u") && !cmd.hasOption("f")) {
+            printHelpAndExit(options, "You must provide an output FASTA file for simulating Illumina reads");
+        }
         
         if(cmd.hasOption("f") && !cmd.hasOption("r")) {
             printHelpAndExit(options, "You must provide an indexed (.fai) genome reference file for FASTA output using option \"-r\".");
@@ -171,6 +175,34 @@ public class Fusim {
             }
         }
 
+        int readLength = 75;
+        if(cmd.hasOption("l")) {
+            try {
+                readLength = Integer.parseInt(cmd.getOptionValue("l"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Read length (-l) must be a number");
+            }
+        }
+
+        int meanFrag = 400;
+        if(cmd.hasOption("m")) {
+            try {
+                meanFrag = Integer.parseInt(cmd.getOptionValue("m"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Mean DNA fragment length (-m) must be a number");
+            }
+        }
+
+        String artPrefix = "fusion-reads";
+        if(cmd.hasOption("y")) {
+            artPrefix = cmd.getOptionValue("y");
+        }
+
+        String artPath = ReadSimulator.DEFAULT_ART_BIN;
+        if(cmd.hasOption("a")) {
+            artPath = cmd.getOptionValue("a");
+        }
+
         double rpkmCutoff = 0.2;
         if(cmd.hasOption("k")) {
             try {
@@ -196,11 +228,6 @@ public class Fusim {
         logger.info("Running Fusim with the following settings:");
         logger.info("------------------------------------------------------------------------");
         logger.info("Input Gene Model file: "+geneModelFile.getAbsolutePath());
-        if(cmd.hasOption("b")) {
-            logger.info("Background BAM file: "+bamFile.getAbsolutePath());
-            logger.info("RPKM cutoff: "+rpkmCutoff);
-            logger.info("Number of threads: "+nThreads);
-        }
         if(cmd.hasOption("n")) {
             logger.info("Total number of generated fusions: "+nFusions);
         }
@@ -213,6 +240,19 @@ public class Fusim {
         if(cmd.hasOption("f")) {
             logger.info("Fasta Output file: "+cmd.getOptionValue("f"));
         }
+        if(cmd.hasOption("b")) {
+            logger.info("-- Generating fusions based on background dataset --");
+            logger.info("Background BAM file: "+bamFile.getAbsolutePath());
+            logger.info("RPKM cutoff: "+rpkmCutoff);
+            logger.info("Number of threads: "+nThreads);
+        }
+        if(cmd.hasOption("u")) {
+            logger.info("-- Simulating Illumina reads using ART --");
+            logger.info("ART Path: "+artPath);
+            logger.info("ART output prefix: "+artPrefix);
+            logger.info("Read length: "+readLength);
+            logger.info("Mean DNA Fragment length: "+meanFrag);
+        }
         logger.info("------------------------------------------------------------------------");
         
         GeneModelParser parser = new UCSCRefFlatParser();
@@ -224,16 +264,18 @@ public class Fusim {
             fg = new RandomGenerator(parser);
         }
         
+        logger.info("Starting fusion gene simulation...");
         long tstart = System.currentTimeMillis();
         List<FusionGene> fusions = fg.generate(geneModelFile, nFusions);
         long tend = System.currentTimeMillis();
         
-        logger.info("Done processing.");
+        logger.info("Simulation complete.");
         double totalTime = ((tend - tstart)/1000);
         logger.info("Total processing time: " + totalTime + "s");
         
         // Generate any read through fusion genes
         if(nReadThrough > 0) {
+            logger.info("Generating read through genes...");
             ReadThroughGenerator rt = new ReadThroughGenerator(parser);
             List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough);
             fusions.addAll(rtFusions);
@@ -265,8 +307,16 @@ public class Fusim {
         
         if(textOutput != null) textOutput.flush();
         if(fastaOutput != null) fastaOutput.flush();
+
+        if(cmd.hasOption("u")) {
+            logger.info("Simulating Illumina reads using ART...");
+            ReadSimulator s = new ReadSimulator();
+            s.run(artPath, new File(cmd.getOptionValue("f")), artPrefix, readLength, meanFrag);
+        }
+
+        logger.info("Fusim run complete. Goodbye!");
     }
-    
+
     @SuppressWarnings("static-access")
     private void buildOptions() {
         options = new Options();
@@ -341,6 +391,11 @@ public class Fusim {
                              .create("z")
             );
         options.addOption(
+                OptionBuilder.withLongOpt("illumina")
+                             .withDescription("Simulate Illumina Reads with ART")
+                             .create("u")
+            );
+        options.addOption(
                 OptionBuilder.withLongOpt("gtf")
                              .withDescription("Input GTF file for conversion")
                              .hasArg()
@@ -351,6 +406,30 @@ public class Fusim {
                              .withDescription("Output refFlat file for conversion")
                              .hasArg()
                              .create("o")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("art")
+                             .withDescription("Path to ART binary for simulating Illumina reads from fusion genes")
+                             .hasArg()
+                             .create("a")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("prefix")
+                             .withDescription("Prefix of output files from ART for simulating Illumina reads")
+                             .hasArg()
+                             .create("y")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("readlength")
+                             .withDescription("Length of reads to be simulated from ART for simulating Illumina reads")
+                             .hasArg()
+                             .create("l")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("meanfrag")
+                             .withDescription("Mean size of DNA fragments for paired-end reads from ART for simulating Illumina reads")
+                             .hasArg()
+                             .create("m")
             );
     }
 
