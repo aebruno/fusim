@@ -69,14 +69,34 @@ public class Fusim {
         if (cmd.hasOption("h")) {
             printHelpAndExit(options);
         }
+
+        if(cmd.hasOption("z")) {
+            if(!cmd.hasOption("i")) {
+                printHelpAndExit(options, "Please specify a path to a GTF/GFF file for conversion with option -i");
+            }
+            if(!cmd.hasOption("o")) {
+                printHelpAndExit(options, "Please specify an output filename with option -o");
+            }
+
+            File outFile = new File(cmd.getOptionValue("o"));
+            File gtfFile = new File(cmd.getOptionValue("i"));
+            if(!gtfFile.canRead()) {
+                printHelpAndExit(options, "Can't read input GTF file");
+            }
+
+            GTF2RefFlat gtf2Flat = new GTF2RefFlat();
+            
+            gtf2Flat.convert(gtfFile, outFile);
+            System.exit(0);
+        }
         
         if(!cmd.hasOption("g")) {
-            printHelpAndExit(options, "Please specify a path to a gene model file with option -g.");
+            printHelpAndExit(options, "Please specify a path to a gene model file with option -g");
         }
         
         File geneModelFile = new File(cmd.getOptionValue("g"));
         if(!geneModelFile.canRead()) {
-            printHelpAndExit(options, "Please provide a valid Gene Model file");
+            printHelpAndExit(options, "Can't read Gene Model file");
         }
         
         PrintWriter textOutput = null;
@@ -314,6 +334,23 @@ public class Fusim {
                              .withDescription("Number of threads to spawn when processing background BAM file")
                              .hasArg()
                              .create("p")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("convert")
+                             .withDescription("Convert GTF/GFF to refFlat (genePred) format")
+                             .create("z")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("gtf")
+                             .withDescription("Input GTF file for conversion")
+                             .hasArg()
+                             .create("i")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("output")
+                             .withDescription("Output refFlat file for conversion")
+                             .hasArg()
+                             .create("o")
             );
     }
 

@@ -2,7 +2,10 @@ package edu.buffalo.fusim;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -36,6 +39,7 @@ public class GTF2RefFlat {
     public void convert(File gtfFile, File outFile) throws IOException {
         map = new HashMap<String, TranscriptData>();
         buildMap(gtfFile);
+        PrintWriter output = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8"));
         
         for(String id : map.keySet()) {
             TranscriptData data = map.get(id);
@@ -145,8 +149,10 @@ public class GTF2RefFlat {
                     StringUtils.join(ArrayUtils.toObject(exonEnds), ",")
             }, "\t"));
             
-            System.out.println(buf.toString());
+            output.println(buf.toString());
         }
+
+        output.flush();
     }
     
     protected class FeatureCompare implements Comparator<Feature> {
