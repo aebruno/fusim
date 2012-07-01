@@ -142,6 +142,15 @@ public class Fusim {
             }
         }
 
+        int nThreads = Runtime.getRuntime().availableProcessors();
+        if(cmd.hasOption("p")) {
+            try {
+                nThreads = Integer.parseInt(cmd.getOptionValue("p"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Number of threads to spawn (-p) must be a number");
+            }
+        }
+
         double rpkmCutoff = 0.2;
         if(cmd.hasOption("k")) {
             try {
@@ -170,6 +179,7 @@ public class Fusim {
         if(cmd.hasOption("b")) {
             logger.info("Background BAM file: "+bamFile.getAbsolutePath());
             logger.info("RPKM cutoff: "+rpkmCutoff);
+            logger.info("Number of threads: "+nThreads);
         }
         if(cmd.hasOption("n")) {
             logger.info("Total number of generated fusions: "+nFusions);
@@ -189,7 +199,7 @@ public class Fusim {
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff);
+            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads);
         } else {
             fg = new RandomGenerator(parser);
         }
@@ -298,6 +308,12 @@ public class Fusim {
                              .withDescription("RPKM cutoff when using background BAM file")
                              .hasArg()
                              .create("k")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("threads")
+                             .withDescription("Number of threads to spawn when processing background BAM file")
+                             .hasArg()
+                             .create("p")
             );
     }
 

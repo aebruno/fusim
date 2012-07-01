@@ -49,18 +49,18 @@ public class BackgroundGenerator implements FusionGenerator {
     private ArrayBlockingQueue<TranscriptRecord> queue;
     private File backgroundFile;
     private double rpkmCutoff;
+    private int threads;
 
-    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff) {
+    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff, int threads) {
         this.parser = parser;
         this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
         this.backgroundFile = backgroundFile;
         this.rpkmCutoff = rpkmCutoff;
+        this.threads = threads;
     }
 
     public List<FusionGene> generate(File gtfFile, int nFusions) {
         logger.info("Processing background reads...");
-        // XXX consider adding a runtime param to allow the user to throttle
-        int threads = Runtime.getRuntime().availableProcessors();
         logger.info("Computing RPKM values using " + threads + " threads...");
 
         GeneModelProducer producer = new GeneModelProducer(gtfFile);
