@@ -23,6 +23,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.List;
 
+import net.sf.picard.sam.MergeSamFiles;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -130,6 +132,14 @@ public class Fusim {
             printHelpAndExit(options, "You must provide an indexed (.fai) genome reference file for FASTA output using option \"-r\".");
         }
 
+        if(cmd.hasOption("j") && !cmd.hasOption("v")) {
+            printHelpAndExit(options, "Missing basename for bowtie index.");
+        }
+
+        if(cmd.hasOption("q") && !cmd.hasOption("b")) {
+            printHelpAndExit(options, "Missing background BAM file to merge with.");
+        }
+
         File referenceFile = null;
         
         if(cmd.hasOption("r")) {
@@ -212,6 +222,11 @@ public class Fusim {
             artPath = cmd.getOptionValue("a");
         }
 
+        String bowtiePath = BowtieAlignment.DEFAULT_BOWTIE_BIN;
+        if(cmd.hasOption("s")) {
+            bowtiePath = cmd.getOptionValue("s");
+        }
+
         double rpkmCutoff = 0.2;
         if(cmd.hasOption("k")) {
             try {
@@ -263,6 +278,13 @@ public class Fusim {
             logger.info("Mean DNA Fragment length: "+meanFrag);
             logger.info("The fold of read coverage: "+readCoverage);
             logger.info("Paired-end reads?: "+(cmd.hasOption("e") ? "Yes" : "No"));
+        }
+        if(cmd.hasOption("j")) {
+            logger.info("-- Aligning simulated Illumina reads using bowtie --");
+            logger.info("Bowtie Path: "+bowtiePath);
+            logger.info("Bowtie index: "+cmd.getOptionValue("v"));
+            logger.info("Alignment threads: "+nThreads);
+            logger.info("Paired-end alignment?: "+(cmd.hasOption("e") ? "Yes" : "No"));
         }
         logger.info("------------------------------------------------------------------------");
         
@@ -323,6 +345,32 @@ public class Fusim {
             logger.info("Simulating Illumina reads using ART...");
             ReadSimulator s = new ReadSimulator();
             s.run(artPath, new File(cmd.getOptionValue("f")), artPrefix, readLength, meanFrag, readCoverage, cmd.hasOption("e"));
+            if(cmd.hasOption("j")) {
+                logger.info("Aligning simulated Illumina reads using bowtie...");
+                BowtieAlignment b = new BowtieAlignment();
+                if(cmd.hasOption("e")) {
+                    b.run(bowtiePath, cmd.getOptionValue("v"), 
+                            new File(artPrefix+"1.fq"), 
+                            new File(artPrefix+"2.fq"), 
+                            new File(artPrefix+".sam"),
+                            nThreads);
+                } else {
+                    b.run(bowtiePath, cmd.getOptionValue("v"), 
+                            new File(artPrefix+".fq"), 
+                            new File(artPrefix+".sam"),
+                            nThreads);
+                }
+                if(cmd.hasOption("q")) {
+                    logger.info("Merging with background BAM file...");
+                    MergeSamFiles merge = new MergeSamFiles();
+                    // XXX need to add check for exit value here
+                    int exitValue = merge.instanceMain(new String[]{
+                        "INPUT="+bamFile.getAbsolutePath(),
+                        "INPUT="+artPrefix+".sam",
+                        "OUTPUT="+artPrefix+"-merged.bam"
+                    });
+                }
+            }
         }
 
         logger.info("Fusim run complete. Goodbye!");
@@ -452,6 +500,28 @@ public class Fusim {
                 OptionBuilder.withLongOpt("paired")
                              .withDescription("Simulate paired-end reads using ART for simulating Illumina reads")
                              .create("e")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("bowtie")
+                             .withDescription("Path to bowtie binary for aligning simulated Illumina reads")
+                             .hasArg()
+                             .create("s")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("index")
+                             .withDescription("basename of bowtie index it use in aligning simulated reads")
+                             .hasArg()
+                             .create("v")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("align")
+                             .withDescription("Align simulated reads from ART using bowtie")
+                             .create("j")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("merge")
+                             .withDescription("Merge aligned fusion reads to background dataset")
+                             .create("q")
             );
     }
 

@@ -14,6 +14,7 @@
         <include>cern.colt:colt</include>
         <include>net.sf.samtools:samtools</include>
         <include>net.sf.picard:ExtractSequences</include>
+        <include>net.sf.picard:MergeSamFiles</include>
         <include>commons-collections:commons-collections</include>
         <include>commons-io:commons-io</include>
         <include>commons-cli:commons-cli</include>
