@@ -141,6 +141,16 @@ public class Fusim {
                 printHelpAndExit(options, "Number of read through fusion genes (-x) must be a number");
             }
         }
+
+        double rpkmCutoff = 0.2;
+        if(cmd.hasOption("k")) {
+            try {
+                rpkmCutoff = Double.parseDouble(cmd.getOptionValue("k"));
+                if(rpkmCutoff < 0 || rpkmCutoff > 1) throw new NumberFormatException();
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "RPKM cutoff (-k) must be 0 < cutoff < 1");
+            }
+        }
         
 
         
@@ -159,9 +169,13 @@ public class Fusim {
         logger.info("Input Gene Model file: "+geneModelFile.getAbsolutePath());
         if(cmd.hasOption("b")) {
             logger.info("Background BAM file: "+bamFile.getAbsolutePath());
+            logger.info("RPKM cutoff: "+rpkmCutoff);
         }
         if(cmd.hasOption("n")) {
             logger.info("Total number of generated fusions: "+nFusions);
+        }
+        if(cmd.hasOption("x")) {
+            logger.info("Total number of read through genes: "+nReadThrough);
         }
         if(cmd.hasOption("t")) {
             logger.info("Text Output file: "+cmd.getOptionValue("t"));
@@ -175,7 +189,7 @@ public class Fusim {
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile, parser);
+            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff);
         } else {
             fg = new RandomGenerator(parser);
         }
@@ -278,6 +292,12 @@ public class Fusim {
                              .withDescription("Number of read through fusion genes")
                              .hasArg()
                              .create("x")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("cutoff")
+                             .withDescription("RPKM cutoff when using background BAM file")
+                             .hasArg()
+                             .create("k")
             );
     }
 

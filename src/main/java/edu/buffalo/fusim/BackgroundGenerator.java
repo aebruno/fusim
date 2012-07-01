@@ -48,11 +48,13 @@ public class BackgroundGenerator implements FusionGenerator {
     private GeneModelParser parser;
     private ArrayBlockingQueue<TranscriptRecord> queue;
     private File backgroundFile;
+    private double rpkmCutoff;
 
-    public BackgroundGenerator(File backgroundFile, GeneModelParser parser) {
+    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff) {
         this.parser = parser;
         this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
         this.backgroundFile = backgroundFile;
+        this.rpkmCutoff = rpkmCutoff;
     }
 
     public List<FusionGene> generate(File gtfFile, int nFusions) {
@@ -70,7 +72,7 @@ public class BackgroundGenerator implements FusionGenerator {
         ArrayList<GeneModelConsumer> consumers = new ArrayList<GeneModelConsumer>();
 
         for (int i = 0; i < threads; i++) {
-            GeneModelConsumer consumer = new GeneModelConsumer(backgroundFile);
+            GeneModelConsumer consumer = new GeneModelConsumer(backgroundFile, this.rpkmCutoff);
             consumer.start();
             consumers.add(consumer);
         }
@@ -212,9 +214,11 @@ public class BackgroundGenerator implements FusionGenerator {
         private Log log = LogFactory.getLog(GeneModelProducer.class);
         private SAMFileReader sam;
         private int totalMappedReads;
+        private double rpkmCutoff;
         private List<RPKM> rpkmList = new ArrayList<RPKM>();
 
-        public GeneModelConsumer(File bamFile) {
+        public GeneModelConsumer(File bamFile, double rpkmCutoff) {
+            this.rpkmCutoff = rpkmCutoff;
             File bamIndexFile = new File(bamFile.getAbsolutePath() + ".bai");
             if (bamIndexFile.canRead()) {
                 sam = new SAMFileReader(bamFile, bamIndexFile);
@@ -254,7 +258,7 @@ public class BackgroundGenerator implements FusionGenerator {
 
                 int count = 0;
                 // XXX do we want only coding exons here???
-                //for(int[] exon : feature.getCodingExons()) {
+                //for(int[] exon : feature.getCodingExons()) 
                 for(int i = 0; i < transcript.getExonStarts().length; i++) {
                     // XXX end-1 here???
                     int start = transcript.getExonStarts()[i];
@@ -274,7 +278,7 @@ public class BackgroundGenerator implements FusionGenerator {
                     it.close();
                 }
                 Double rpkm = (Math.pow(10,9)*(double)count)/((double)totalMappedReads*transcript.getExonBases());
-                if(rpkm > 0.2) {
+                if(rpkm > this.rpkmCutoff) {
                     rpkmList.add(new RPKM(transcript, rpkm));
                 }
             }
