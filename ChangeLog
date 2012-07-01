@@ -3,8 +3,14 @@ Fusim - ChangeLog
 ================================================================================
 
 - 2012-06-30
-	- Ported the mkFromGroupedGxf(..) function from Ken source utilities. The
-	  conversion should behave similiar to gtfToGenePred utility
+	- Added conversion option to convert from GFF/GTF to refFlat genePred
+	  format. Should behave similiar to gtfToGenePred utility from Ken source
+	  utilities
+	- Only use canonical chromosomes. Skip the haplotypes and unassembled
+	  chromosomes (ignore chroms which contain "_")
+	- Added option to control number of threads to spawn when processing
+	  background BAM file
+	- Added option to configure RPKM cutoff value
 
 - 2012-06-29
 	- Re-factored GeneModelParser to use refFlat instead of refGene. Added a
@@ -15,3 +21,4 @@ Fusim - ChangeLog
 	- Added output to both FASTA and TXT formats.
 	- Added option to include only CDS exons or all exons when generating
 	  fusion genes
+

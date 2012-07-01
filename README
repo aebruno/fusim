@@ -49,10 +49,16 @@ usage: fusim
 -f,--fasta <arg>         File name of fasta output
 -g,--genemodel <arg>     Gene Model file
 -h,--help                print usage info
+-i,--gtf <arg>           Input GTF file for conversion
+-k,--cutoff <arg>        RPKM cutoff when using background BAM file
 -n,--fusions <arg>       Total number of fusions to generate
+-o,--output <arg>        Output refFlat file for conversion
+-p,--threads <arg>       Number of threads to spawn when processing
+                         background BAM file
 -r,--reference <arg>     Reference genome indexed fasta, fai
 -t,--text <arg>          File name of text output
 -x,--readthrough <arg>   Number of read through fusion genes
+-z,--convert             Convert GTF/GFF to refFlat (genePred) format
 
 
 - Generate Fusion genes using UCSC refFlat.txt gene model:
@@ -68,13 +74,26 @@ usage: fusim
          --fasta=fusions.fasta \
          --text=fusions.txt
 
-- Generate Fusion genes based on a background dataset (BAM file) using RPKM:
+- Generate Fusion genes based on a background dataset (BAM file) using RPKM
+  cutoff of 0.2. Note background BAM files must be indexed (*.bam.bai):
 
-  $ java -jar fusim.jar -g refFlat.txt -n 100 -b background-reads.bam
+  $ java -jar fusim.jar -g refFlat.txt -n 10 -b background-reads.bam --cutoff=0.2
 
 - Generate Fusion genes with read through genes:
 
   $ java -jar fusim.jar -g refFlat.txt -n 10 -x 5
+
+- Only use CDS exons when generating fusion genes:
+
+  $ java -jar fusim.jar -g refFlat.txt -n 10 --cds
+
+- Working with GFF/GTF format
+    
+    - First need to convert GFF/GTF to refFlat (genePred) format:
+      $ java -jar fusim.jar --convert -i gencode.gtf -o gencodeRefFlat.txt
+
+    - Then run fusim using the converted refFlat file:
+      $ java -jar fusim.jar -g gencodeRefFlat.txt -n 10
 
 ---------------------
 Authors
@@ -84,4 +103,3 @@ Authors
 - Song Lui
 - Jianmin Wang
 - Jeffrey C. Miecznikowski
-
