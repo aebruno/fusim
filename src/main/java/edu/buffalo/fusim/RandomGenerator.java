@@ -56,10 +56,13 @@ public class RandomGenerator implements FusionGenerator {
         raf.readLine();
 
         TranscriptRecord record = null;
-        for (int tries = 0; tries < 5; tries++) {
+        for (int tries = 0; tries < 100; tries++) {
             String line = raf.readLine();
             try {
                 record = parser.parseLine(line);
+                
+                //XXX skip the haplotypes and unassembled chroms
+                if(record.getChrom().contains("_")) continue;
             } catch (GTFParseException e) {
                 // XXX ignored for now;
             }
@@ -69,7 +72,7 @@ public class RandomGenerator implements FusionGenerator {
 
         if (record == null) {
             throw new IOException(
-                    "Failed to find random transcript after 5 attempts");
+                    "Failed to find random transcript after 100 attempts");
         }
 
         return record;

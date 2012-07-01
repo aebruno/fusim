@@ -189,11 +189,13 @@ public class BackgroundGenerator implements FusionGenerator {
 
                 String line = null;
                 while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("#"))
-                        continue;
+                    if (line.startsWith("#")) continue;
                     TranscriptRecord feature;
                     try {
                         feature = parser.parseLine(line);
+
+                        //XXX skip the haplotypes and unassembled chroms
+                        if(feature.getChrom().contains("_")) continue;
                         queue.put(feature);
                     } catch (InterruptedException e) {
                         log.fatal("InterruptedException while adding to queue: "

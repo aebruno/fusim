@@ -84,6 +84,10 @@ public class ReadThroughGenerator implements FusionGenerator {
                 if (line.startsWith("#")) continue;
                 
                 TranscriptRecord record = parser.parseLine(line);
+                
+                //XXX skip the haplotypes and unassembled chroms
+                if(record.getChrom().contains("_")) continue;
+
                 transcripts.add(record);
             }
         } catch (IOException e) {
