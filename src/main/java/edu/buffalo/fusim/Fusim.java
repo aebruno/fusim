@@ -193,6 +193,15 @@ public class Fusim {
             }
         }
 
+        int readCoverage = 10;
+        if(cmd.hasOption("d")) {
+            try {
+                readCoverage = Integer.parseInt(cmd.getOptionValue("d"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Read coverage (-l) must be a number");
+            }
+        }
+
         String artPrefix = "fusion-reads";
         if(cmd.hasOption("y")) {
             artPrefix = cmd.getOptionValue("y");
@@ -252,6 +261,8 @@ public class Fusim {
             logger.info("ART output prefix: "+artPrefix);
             logger.info("Read length: "+readLength);
             logger.info("Mean DNA Fragment length: "+meanFrag);
+            logger.info("The fold of read coverage: "+readCoverage);
+            logger.info("Paired-end reads?: "+(cmd.hasOption("e") ? "Yes" : "No"));
         }
         logger.info("------------------------------------------------------------------------");
         
@@ -311,7 +322,7 @@ public class Fusim {
         if(cmd.hasOption("u")) {
             logger.info("Simulating Illumina reads using ART...");
             ReadSimulator s = new ReadSimulator();
-            s.run(artPath, new File(cmd.getOptionValue("f")), artPrefix, readLength, meanFrag);
+            s.run(artPath, new File(cmd.getOptionValue("f")), artPrefix, readLength, meanFrag, readCoverage, cmd.hasOption("e"));
         }
 
         logger.info("Fusim run complete. Goodbye!");
@@ -430,6 +441,17 @@ public class Fusim {
                              .withDescription("Mean size of DNA fragments for paired-end reads from ART for simulating Illumina reads")
                              .hasArg()
                              .create("m")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("coverage")
+                             .withDescription("The fold of read coverage to be simulated using ART for simulating Illumina reads")
+                             .hasArg()
+                             .create("d")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("paired")
+                             .withDescription("Simulate paired-end reads using ART for simulating Illumina reads")
+                             .create("e")
             );
     }
 
