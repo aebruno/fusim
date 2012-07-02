@@ -398,8 +398,8 @@ public class Fusim {
                              .create("r")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("bam")
-                             .withDescription("Background BAM file")
+                OptionBuilder.withLongOpt("background")
+                             .withDescription("Path to BAM file containing background reads")
                              .hasArg()
                              .create("b")
             );
