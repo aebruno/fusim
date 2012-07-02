@@ -166,7 +166,8 @@ Align Illumina NGS reads using bowtie and merge with a background dataset
          --align \
          --index=hg19 \
          --background=myreads.bam \
-         --cutoff=0.2
+         --cutoff=0.2 \
+         --merge
 
 -------------------------------------------------------------------------
 KNOWN BUGS
