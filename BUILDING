@@ -1,0 +1,33 @@
+===============================================================================
+Fusim - Building the source
+===============================================================================
+
+- To build fusim you need maven: http://maven.apache.org/
+
+- Also need to download jar files that are currently not included in the main
+  maven repositories:
+
+  - Picard: http://picard.sourceforge.net
+  - Colt: http://acs.lbl.gov/software/colt/
+
+- Need to install these jars into your local maven repo as follows:
+
+ $ mvn install:install-file \ 
+       -DgroupId=cern.colt -DartifactId=colt -Dversion=1.2.0 \
+       -Dpackaging=jar -DgeneratePom=true -Dfile=colt.jar
+
+ $ mvn install:install-file \ 
+       -DgroupId=net.sf.samtools -DartifactId=samtools -Dversion=1.61 \
+       -Dpackaging=jar -DgeneratePom=true -Dfile=samtools.jar
+
+ $ mvn install:install-file \ 
+       -DgroupId=net.sf.picard -DartifactId=ExtractSequences -Dversion=1.70 \
+       -Dpackaging=jar -DgeneratePom=true -Dfile=ExtractSequences.jar
+
+ $ mvn install:install-file \ 
+       -DgroupId=net.sf.picard -DartifactId=MergeSamFiles -Dversion=1.70 \
+       -Dpackaging=jar -DgeneratePom=true -Dfile=MergeSamFiles.jar
+
+- To build fusim run:
+
+ $ mvn clean compile assembly:assembly
