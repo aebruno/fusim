@@ -2,7 +2,14 @@
 Fusim - ChangeLog
 ================================================================================
 
-- 2012-06-30
+- 2012-07-01 (v0.0.3)
+
+	- Added support for executing external program (ART) to simulate Illumina
+	  reads from generated fusion genes.
+	- Added option to align simulated reads from ART using Bowtie. 
+	- Added option to merge resulting alignments with background dataset.
+
+- 2012-06-30 (v0.0.2)
 	- Added conversion option to convert from GFF/GTF to refFlat genePred
 	  format. Should behave similiar to gtfToGenePred utility from Ken source
 	  utilities
@@ -12,7 +19,7 @@ Fusim - ChangeLog
 	  background BAM file
 	- Added option to configure RPKM cutoff value
 
-- 2012-06-29
+- 2012-06-29 (v0.0.1)
 	- Re-factored GeneModelParser to use refFlat instead of refGene. Added a
 	  utility to convert GTF files to refFlat format.
 	- Added GTF parser. Updated code to use Strand enum.
@@ -21,4 +28,3 @@ Fusim - ChangeLog
 	- Added output to both FASTA and TXT formats.
 	- Added option to include only CDS exons or all exons when generating
 	  fusion genes
-
