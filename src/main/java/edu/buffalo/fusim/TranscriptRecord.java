@@ -17,6 +17,7 @@
 package edu.buffalo.fusim;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -43,6 +44,7 @@ public class TranscriptRecord {
     private int cdsEnd;
     private int exonCount;
     private int exonBases;
+    private int cdsExonBases;
     private int[] exonStarts;
     private int[] exonEnds;
     private int[] exonFrames;
@@ -93,12 +95,16 @@ public class TranscriptRecord {
 
                 if(start >= record.cdsStart && end <= record.cdsEnd) {
                     record.codingExons.add(new int[]{start,end});
+                    record.cdsExonBases += end-start;
                 } else if(start <= record.cdsStart && record.cdsStart <= end && end <= record.cdsEnd) {
                     record.codingExons.add(new int[]{record.cdsStart,end});
+                    record.cdsExonBases += end-record.cdsStart;
                 } else if(start >= record.cdsStart && record.cdsStart <= end && end >= record.cdsEnd) {
                     record.codingExons.add(new int[]{start,record.cdsEnd});
+                    record.cdsExonBases += record.cdsEnd-start;
                 } else if(start < record.cdsStart && end > record.cdsEnd) {
                     record.codingExons.add(new int[]{record.cdsStart, record.cdsEnd});
+                    record.cdsExonBases += record.cdsEnd-record.cdsStart;
                 }
             }
         } catch (NumberFormatException e) {
@@ -150,6 +156,88 @@ public class TranscriptRecord {
         
         return exonIndicies;
     }
+
+    public int[] generateExonBoundryBreak(boolean cdsExonsOnly) {
+        List<int []> validExonBreaks = this.getValidExonBoundryBreaks(cdsExonsOnly);
+        if(validExonBreaks.size() == 0) {
+            throw new RuntimeException("No valid exon breaks found: \n"+this.toString());
+        }
+        
+        Random r = new Random();
+        int index = r.nextInt(validExonBreaks.size());
+        int[] exonIndicies = validExonBreaks.get(index);
+        if(Strand.REVERSE.equals(strand)) ArrayUtils.reverse(exonIndicies);
+        return exonIndicies;
+    }
+
+    public List<int[]> getValidExonBoundryBreaks(boolean cdsExonsOnly) {
+        List<int []> exonList = cdsExonsOnly ? this.codingExons : this.exons;
+        
+        if(exonList.size() == 0) {
+            throw new RuntimeException("Missing exons: \n"+this.toString());
+        }
+
+        List<int []> validExonBreaks = new ArrayList<int []>();
+        for(int i = 0; i < exonList.size(); i++) {
+            int length = 0;
+            for(int j = 0; j < i; j++) {
+                int index = Strand.REVERSE.equals(strand) ? ((exonList.size()-1)-j) : j;
+                int[] exon = exonList.get(index);
+                length += exon[1]-exon[0];
+            }
+            if(length != 0 && (length % 3) == 0) {
+                int[] validBreak = new int[i];
+                for(int j = 0; j < i; j++) {
+                    int index = Strand.REVERSE.equals(strand) ? ((exonList.size()-1)-j) : j;
+                    validBreak[j] = index;
+                }
+                validExonBreaks.add(validBreak);
+            }
+        }
+        
+        /**
+         * This permutes all possible exon boundries. Don't do this :)
+         */
+//         List<int []> validExonBreaks = new ArrayList<int []>();
+//         for(int x = 0; x < exonList.size(); x++) {
+//             for(int i = x; i < exonList.size(); i++) {
+//                 int length = 0;
+//                 int count = 0;
+//                 for(int j = x; j < i; j++) {
+//                     int index = Strand.REVERSE.equals(strand) ? ((exonList.size()-1)-j) : j;
+//                     int[] exon = exonList.get(index);
+//                     length += exon[1]-exon[0];
+//                     count++;
+//                 }
+//                 if(length != 0 && (length % 3) == 0) {
+//                     int[] validBreak = new int[count];
+//                     int p = 0;
+//                     for(int j = x; j < i; j++) {
+//                         int index = Strand.REVERSE.equals(strand) ? ((exonList.size()-1)-j) : j;
+//                         validBreak[p++] = index;
+//                     }
+//                     validExonBreaks.add(validBreak);
+//                 }
+//             }
+//         }
+
+
+        if(validExonBreaks.size() == 0) {
+            int[] validBreak = new int[exonList.size()];
+            int length = 0;
+            for(int i = 0; i < exonList.size(); i++) {
+                int index = Strand.REVERSE.equals(strand) ? ((exonList.size()-1)-i) : i;
+                validBreak[i] = index;
+                int[] exon = exonList.get(index);
+                length += exon[1]-exon[0];
+            }
+            if(length % 3 == 0) {
+                validExonBreaks.add(validBreak);
+            }
+        }
+        
+        return validExonBreaks;
+    }
     
     private static int[] toIntArray(String str) throws NumberFormatException {
         str = StringUtils.stripEnd(str, ",");
@@ -168,6 +256,8 @@ public class TranscriptRecord {
         str += "Gene: "+geneId+"\n";
         str += "CDS: " +cdsStart+'-'+cdsEnd + "\n";
         str += "Exon Count: " + exonCount + "\n";
+        str += "Exon Bases: " + exonBases + "\n";
+        str += "CDS Exon Bases: " + cdsExonBases + "\n";
         str += "Exon Starts: "+ ArrayUtils.toString(exonStarts) + "\n";
         str += "Exon Ends: "+ArrayUtils.toString(exonEnds) + "\n";
         str += "Exon Frames: "+ArrayUtils.toString(exonFrames) + "\n";
@@ -215,6 +305,10 @@ public class TranscriptRecord {
 
     public int getExonBases() {
         return exonBases;
+    }
+
+    public int getCdsExonBases() {
+        return cdsExonBases;
     }
 
     public int[] getExonStarts() {

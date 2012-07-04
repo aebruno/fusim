@@ -60,6 +60,7 @@ public class RandomGenerator implements FusionGenerator {
             String line = raf.readLine();
             try {
                 record = parser.parseLine(line);
+                if(record == null) continue;
                 
                 //XXX skip the haplotypes and unassembled chroms
                 if(record.getChrom().contains("_")) continue;

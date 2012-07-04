@@ -254,16 +254,17 @@ public class Fusim {
         logger.info("Reference Gene Model: "+geneModelFile.getAbsolutePath());
         logger.info("Number of simulated fusion genes: "+nFusions);
         logger.info("Number of read through genes: "+nReadThrough);
-        logger.info("Auto-correct orienation: "+(cmd.hasOption("F") ? "yes" : "no"));
+        logger.info("Auto-correct orientation: "+(cmd.hasOption("F") ? "yes" : "no"));
         logger.info("Allow fusion genes outside of ORF: "+(cmd.hasOption("o") ? "yes" : "no"));
+        logger.info("Force fusion breaks on exon boundries: "+(cmd.hasOption("s") ? "yes" : "no"));
         if(cmd.hasOption("t")) {
-            logger.info("Text Output: "+("-".equals(cmd.getOptionValue("t")) ? "stdout" : cmd.getOptionValue("t")));
+            logger.info("Text Output: "+("-".equals(cmd.getOptionValue("t")) ? "<stdout>" : cmd.getOptionValue("t")));
         }
         if(cmd.hasOption("f")) {
-            logger.info("Fasta Output: "+("-".equals(cmd.getOptionValue("f")) ? "stdout" : cmd.getOptionValue("f")));
+            logger.info("Fasta Output: "+("-".equals(cmd.getOptionValue("f")) ? "<stdout>" : cmd.getOptionValue("f")));
         }
         if(!cmd.hasOption("f") && !cmd.hasOption("t")) {
-            logger.info("Text Output: stdout");
+            logger.info("Text Output: <stdout>");
         }
         if(cmd.hasOption("b")) {
             logger.info("-- Generating fusions based on background dataset --");
@@ -290,7 +291,7 @@ public class Fusim {
         }
         logger.info("------------------------------------------------------------------------");
         
-        GeneModelParser parser = new UCSCRefFlatParser();
+        GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("s"), cmd.hasOption("c"));
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
@@ -329,7 +330,8 @@ public class Fusim {
             // Second half of gene2
             int[] break2 = f.getGene2().generateExonBreak(false, cmd.hasOption("c"));
 
-            if(!cmd.hasOption("o")) {
+            // Keep ORF (don't allow out of frame) and allow splitting of exons
+            if(!cmd.hasOption("o") && !cmd.hasOption("s")) {
                 // Ensure fusion gene is within ORF
                 int break1BaseCount = 0;
                 for(int i = 0; i < break1.length; i++) {
@@ -360,6 +362,14 @@ public class Fusim {
                     f.getGene2().getExons(cmd.hasOption("c")).get(break2[0])[1] -= break2BaseAdjust;
 
                 }
+            } else if(cmd.hasOption("s") && !cmd.hasOption("o")) {
+                // Keep ORF (don't allow out of frame) and don't allow splitting of exons (keep exon boundries)
+                // Break gene 1 on exons boundries
+                break1 = f.getGene1().generateExonBoundryBreak(cmd.hasOption("c"));
+                
+                // Break gene 2 on exons boundries
+                break2 = f.getGene2().generateExonBoundryBreak(cmd.hasOption("c"));
+
             }
             
             if(textOutput != null) {
@@ -572,6 +582,11 @@ public class Fusim {
                 OptionBuilder.withLongOpt("out-of-frame")
                              .withDescription("Allow fusion genes outside of reading frames")
                              .create("o")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("keep-exon-boundries")
+                             .withDescription("Generate fusion breaks on exon boundries only")
+                             .create("s")
             );
     }
 

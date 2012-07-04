@@ -209,6 +209,7 @@ public class BackgroundGenerator implements FusionGenerator {
                     TranscriptRecord feature;
                     try {
                         feature = parser.parseLine(line);
+                        if(feature == null) continue;
 
                         //XXX skip the haplotypes and unassembled chroms
                         if(feature.getChrom().contains("_")) continue;
