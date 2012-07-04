@@ -255,6 +255,7 @@ public class Fusim {
         logger.info("Number of simulated fusion genes: "+nFusions);
         logger.info("Number of read through genes: "+nReadThrough);
         logger.info("Auto-correct orienation: "+(cmd.hasOption("F") ? "yes" : "no"));
+        logger.info("Allow fusion genes outside of ORF: "+(cmd.hasOption("o") ? "yes" : "no"));
         if(cmd.hasOption("t")) {
             logger.info("Text Output: "+("-".equals(cmd.getOptionValue("t")) ? "stdout" : cmd.getOptionValue("t")));
         }
@@ -327,6 +328,39 @@ public class Fusim {
             
             // Second half of gene2
             int[] break2 = f.getGene2().generateExonBreak(false, cmd.hasOption("c"));
+
+            if(!cmd.hasOption("o")) {
+                // Ensure fusion gene is within ORF
+                int break1BaseCount = 0;
+                for(int i = 0; i < break1.length; i++) {
+                    int[] exon = f.getGene1().getExons(cmd.hasOption("c")).get(break1[i]);
+                    break1BaseCount += exon[1]-exon[0];
+                }
+
+                int break2BaseCount = 0;
+                for(int i = 0; i < break2.length; i++) {
+                    int[] exon = f.getGene2().getExons(cmd.hasOption("c")).get(break2[i]);
+                    break2BaseCount += exon[1]-exon[0];
+                }
+
+                if((break1BaseCount+break2BaseCount) % 3 != 0) {
+                    // Auto adjust 
+                    int break1BaseAdjust = 0;
+                    int break2BaseAdjust = 0;
+                    while(break1BaseCount % 3 != 0) {
+                        break1BaseAdjust++;
+                        break1BaseCount--;
+                    }
+                    while(break2BaseCount % 3 != 0) {
+                        break2BaseAdjust++;
+                        break2BaseCount--;
+                    }
+
+                    f.getGene1().getExons(cmd.hasOption("c")).get(break1[0])[1] -= break1BaseAdjust;
+                    f.getGene2().getExons(cmd.hasOption("c")).get(break2[0])[1] -= break2BaseAdjust;
+
+                }
+            }
             
             if(textOutput != null) {
                 textOutput.println(f.genTXT(break1, break2, cmd.hasOption("c")));
@@ -533,6 +567,11 @@ public class Fusim {
                 OptionBuilder.withLongOpt("fix-orientation")
                              .withDescription("Fix orientation of genes selected for a fusion if located on different strands")
                              .create("F")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("out-of-frame")
+                             .withDescription("Allow fusion genes outside of reading frames")
+                             .create("o")
             );
     }
 
