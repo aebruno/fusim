@@ -76,11 +76,11 @@ public class Fusim {
             if(!cmd.hasOption("i")) {
                 printHelpAndExit(options, "Please specify a path to a GTF/GFF file for conversion with option -i");
             }
-            if(!cmd.hasOption("o")) {
-                printHelpAndExit(options, "Please specify an output filename with option -o");
+            if(!cmd.hasOption("O")) {
+                printHelpAndExit(options, "Please specify an output filename with option -O");
             }
 
-            File outFile = new File(cmd.getOptionValue("o"));
+            File outFile = new File(cmd.getOptionValue("O"));
             File gtfFile = new File(cmd.getOptionValue("i"));
             if(!gtfFile.canRead()) {
                 printHelpAndExit(options, "Can't read input GTF file");
@@ -124,7 +124,7 @@ public class Fusim {
             textOutput = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
         }
 
-        if(cmd.hasOption("u") && !cmd.hasOption("f")) {
+        if(cmd.hasOption("U") && !cmd.hasOption("f")) {
             printHelpAndExit(options, "You must provide an output FASTA file for simulating Illumina reads");
         }
         
@@ -218,13 +218,13 @@ public class Fusim {
         }
 
         String artPath = ReadSimulator.DEFAULT_ART_BIN;
-        if(cmd.hasOption("a")) {
-            artPath = cmd.getOptionValue("a");
+        if(cmd.hasOption("A")) {
+            artPath = cmd.getOptionValue("A");
         }
 
         String bowtiePath = BowtieAlignment.DEFAULT_BOWTIE_BIN;
-        if(cmd.hasOption("s")) {
-            bowtiePath = cmd.getOptionValue("s");
+        if(cmd.hasOption("S")) {
+            bowtiePath = cmd.getOptionValue("S");
         }
 
         double rpkmCutoff = 0.2;
@@ -270,7 +270,7 @@ public class Fusim {
             logger.info("RPKM cutoff: "+rpkmCutoff);
             logger.info("Number of threads: "+nThreads);
         }
-        if(cmd.hasOption("u")) {
+        if(cmd.hasOption("U")) {
             logger.info("-- Simulating Illumina reads using ART --");
             logger.info("ART Path: "+artPath);
             logger.info("ART output prefix: "+artPrefix);
@@ -341,7 +341,7 @@ public class Fusim {
         if(textOutput != null) textOutput.flush();
         if(fastaOutput != null) fastaOutput.flush();
 
-        if(cmd.hasOption("u")) {
+        if(cmd.hasOption("U")) {
             logger.info("Simulating Illumina reads using ART...");
             ReadSimulator s = new ReadSimulator();
             s.run(artPath, new File(cmd.getOptionValue("f")), artPrefix, readLength, meanFrag, readCoverage, cmd.hasOption("e"));
@@ -452,7 +452,7 @@ public class Fusim {
         options.addOption(
                 OptionBuilder.withLongOpt("illumina")
                              .withDescription("Simulate Illumina Reads with ART")
-                             .create("u")
+                             .create("U")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gtf")
@@ -464,13 +464,13 @@ public class Fusim {
                 OptionBuilder.withLongOpt("output")
                              .withDescription("Output refFlat file for conversion")
                              .hasArg()
-                             .create("o")
+                             .create("O")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("art")
                              .withDescription("Path to ART binary for simulating Illumina reads from fusion genes")
                              .hasArg()
-                             .create("a")
+                             .create("A")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("prefix")
@@ -505,7 +505,7 @@ public class Fusim {
                 OptionBuilder.withLongOpt("bowtie")
                              .withDescription("Path to bowtie binary for aligning simulated Illumina reads")
                              .hasArg()
-                             .create("s")
+                             .create("S")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("index")
