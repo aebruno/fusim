@@ -21,7 +21,7 @@ public class ReadThroughGenerator implements FusionGenerator {
         this.parser = parser;
     }
         
-    public List<FusionGene> generate(File gtfFile, int nFusions) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
         List<TranscriptRecord> transcripts = this.parseTranscripts(gtfFile);
         Collections.sort(transcripts, new TranscriptCompare());
         
@@ -102,7 +102,7 @@ public class ReadThroughGenerator implements FusionGenerator {
     
     public static void main(String[] args) throws Exception {
         ReadThroughGenerator g = new ReadThroughGenerator(new UCSCRefFlatParser());
-        System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1));
+        System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM));
     }
 
 }

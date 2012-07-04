@@ -32,7 +32,7 @@ public class RandomGenerator implements FusionGenerator {
         this.parser = parser;
     }
 
-    public List<FusionGene> generate(File gtfFile, int nFusions) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
         List<FusionGene> list = new ArrayList<FusionGene>();
         Random r = new Random();
         
@@ -81,6 +81,6 @@ public class RandomGenerator implements FusionGenerator {
 
     public static void main(String[] args) throws Exception {
         RandomGenerator g = new RandomGenerator(new UCSCRefFlatParser());
-        System.out.println(g.generate(new File("data/refGene.txt"), 1));
+        System.out.println(g.generate(new File("data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM));
     }
 }

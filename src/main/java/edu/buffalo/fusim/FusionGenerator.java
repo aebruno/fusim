@@ -21,6 +21,6 @@ import java.util.List;
 
 public interface FusionGenerator {
     
-    public List<FusionGene> generate(File gtfFile, int nFusions);
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method);
 
 }

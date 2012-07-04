@@ -51,18 +51,16 @@ public class BackgroundGenerator implements FusionGenerator {
     private File backgroundFile;
     private double rpkmCutoff;
     private int threads;
-    private boolean useBins;
 
-    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff, int threads, boolean useBins) {
+    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff, int threads) {
         this.parser = parser;
         this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
         this.backgroundFile = backgroundFile;
         this.rpkmCutoff = rpkmCutoff;
         this.threads = threads;
-        this.useBins = useBins;
     }
 
-    public List<FusionGene> generate(File gtfFile, int nFusions) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
         logger.info("Processing background reads...");
         logger.info("Computing RPKM values using " + threads + " threads...");
 
@@ -104,8 +102,8 @@ public class BackgroundGenerator implements FusionGenerator {
         BinGenes bin = new BinGenes(nFusions);
         bin.fill(rpkm);
 
-        if(useBins) {
-            logger.info("Generating fusions using binned RPKM values...");
+        if(GeneSelectionMethod.BINNED.equals(method)) {
+            logger.info("Generating fusions using RPKM bins...");
             for(int i = 0; i < bin.size(); i++) {
                 IntArrayList b = bin.getBin(i);
                 b.trimToSize();
@@ -113,8 +111,8 @@ public class BackgroundGenerator implements FusionGenerator {
                 fusions.add(new FusionGene(rpkm.get(sample[0]).getTranscript(),
                                            rpkm.get(sample[1]).getTranscript()));
             }
-        } else {
-            logger.info("Generating fusions based on uniform background distribution...");
+        } else if(GeneSelectionMethod.EMPIRICAL.equals(method)) {
+            logger.info("Generating fusions based on empirical background distribution...");
             Random r = new Random();
             int[] distribution = new int[rpkm.size()];
             int index = 0;
@@ -135,6 +133,15 @@ public class BackgroundGenerator implements FusionGenerator {
 
                 fusions.add(new FusionGene(rpkm.get(b1.get(r.nextInt(b1.size()))).getTranscript(),
                                            rpkm.get(b2.get(r.nextInt(b2.size()))).getTranscript()));
+            }
+        } else  {
+            logger.info("Generating fusions based on uniform distribution...");
+            Random r = new Random();
+            for(int i = 0; i < nFusions; i++) {
+                int index1 = r.nextInt(nFusions);
+                int index2 = r.nextInt(nFusions);
+                fusions.add(new FusionGene(rpkm.get(index1).getTranscript(),
+                                           rpkm.get(index2).getTranscript()));
             }
         }
         

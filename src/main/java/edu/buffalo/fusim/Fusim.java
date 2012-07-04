@@ -195,9 +195,9 @@ public class Fusim {
         }
 
         int meanFrag = 400;
-        if(cmd.hasOption("m")) {
+        if(cmd.hasOption("M")) {
             try {
-                meanFrag = Integer.parseInt(cmd.getOptionValue("m"));
+                meanFrag = Integer.parseInt(cmd.getOptionValue("M"));
             } catch(NumberFormatException e) {
                 printHelpAndExit(options, "Mean DNA fragment length (-m) must be a number");
             }
@@ -237,6 +237,14 @@ public class Fusim {
             }
         }
         
+        GeneSelectionMethod geneSelectioMethod = GeneSelectionMethod.UNIFORM;
+        if(cmd.hasOption("B")) {
+            GeneSelectionMethod sm = GeneSelectionMethod.fromString(cmd.getOptionValue("B"));
+            if(sm == null) {
+                printHelpAndExit(options, "Invalid gene selection method: "+cmd.getOptionValue("B"));
+            }
+            geneSelectioMethod = sm;
+        }
 
         
         File bamFile = null;
@@ -271,7 +279,7 @@ public class Fusim {
             logger.info("Background BAM file: "+bamFile.getAbsolutePath());
             logger.info("RPKM cutoff: "+rpkmCutoff);
             logger.info("Number of threads: "+nThreads);
-            logger.info("Gene selection method: "+(cmd.hasOption("B") ? "RPKM Bins" : "uniform"));
+            logger.info("Gene selection method: "+geneSelectioMethod.toString());
         }
         if(cmd.hasOption("U")) {
             logger.info("-- Simulating Illumina reads using ART --");
@@ -295,14 +303,14 @@ public class Fusim {
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads, cmd.hasOption("B"));
+            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads);
         } else {
             fg = new RandomGenerator(parser);
         }
         
         logger.info("Starting fusion gene simulation...");
         long tstart = System.currentTimeMillis();
-        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions);
+        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions, geneSelectioMethod);
         long tend = System.currentTimeMillis();
         
         logger.info("Simulation complete.");
@@ -313,7 +321,7 @@ public class Fusim {
         if(nReadThrough > 0) {
             logger.info("Generating read through genes...");
             ReadThroughGenerator rt = new ReadThroughGenerator(parser);
-            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough);
+            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough, geneSelectioMethod);
             fusions.addAll(rtFusions);
         }
         
@@ -533,7 +541,7 @@ public class Fusim {
                 OptionBuilder.withLongOpt("meanfrag")
                              .withDescription("Mean size of DNA fragments for paired-end reads from ART for simulating Illumina reads")
                              .hasArg()
-                             .create("m")
+                             .create("M")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("coverage")
@@ -569,8 +577,9 @@ public class Fusim {
                              .create("q")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("rpkm-bins")
-                             .withDescription("Sort genes from background dataset into bins according to their RPKM values and generate a fusion from each bin.")
+                OptionBuilder.withLongOpt("gene-selection-method")
+                             .withDescription("Method to use when selecting genes for fusions: uniform|empirical|binned")
+                             .hasArg()
                              .create("B")
             );
         options.addOption(
