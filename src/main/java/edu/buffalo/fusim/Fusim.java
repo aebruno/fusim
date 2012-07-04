@@ -269,6 +269,7 @@ public class Fusim {
             logger.info("Background BAM file: "+bamFile.getAbsolutePath());
             logger.info("RPKM cutoff: "+rpkmCutoff);
             logger.info("Number of threads: "+nThreads);
+            logger.info("Fusion simulation method: "+(cmd.hasOption("B") ? "RPKM Bins" : "uniform"));
         }
         if(cmd.hasOption("U")) {
             logger.info("-- Simulating Illumina reads using ART --");
@@ -292,7 +293,7 @@ public class Fusim {
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads);
+            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads, cmd.hasOption("B"));
         } else {
             fg = new RandomGenerator(parser);
         }
@@ -522,6 +523,11 @@ public class Fusim {
                 OptionBuilder.withLongOpt("merge")
                              .withDescription("Merge aligned fusion reads to background dataset")
                              .create("q")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("rpkm-bins")
+                             .withDescription("Sort genes from background dataset into bins according to their RPKM values and generate a fusion from each bin.")
+                             .create("B")
             );
     }
 
