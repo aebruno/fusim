@@ -271,7 +271,7 @@ public class Fusim {
             logger.info("Background BAM file: "+bamFile.getAbsolutePath());
             logger.info("RPKM cutoff: "+rpkmCutoff);
             logger.info("Number of threads: "+nThreads);
-            logger.info("Fusion simulation method: "+(cmd.hasOption("B") ? "RPKM Bins" : "uniform"));
+            logger.info("Gene selection method: "+(cmd.hasOption("B") ? "RPKM Bins" : "uniform"));
         }
         if(cmd.hasOption("U")) {
             logger.info("-- Simulating Illumina reads using ART --");

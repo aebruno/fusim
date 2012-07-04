@@ -100,11 +100,12 @@ public class BackgroundGenerator implements FusionGenerator {
         
         List<FusionGene> fusions = new ArrayList<FusionGene>();
 
+        // First bin genes into RPKM buckets
+        BinGenes bin = new BinGenes(nFusions);
+        bin.fill(rpkm);
+
         if(useBins) {
             logger.info("Generating fusions using binned RPKM values...");
-            BinGenes bin = new BinGenes(nFusions);
-            bin.fill(rpkm);
-            
             for(int i = 0; i < bin.size(); i++) {
                 IntArrayList b = bin.getBin(i);
                 b.trimToSize();
@@ -115,11 +116,25 @@ public class BackgroundGenerator implements FusionGenerator {
         } else {
             logger.info("Generating fusions based on uniform background distribution...");
             Random r = new Random();
-            for(int i = 0; i < nFusions; i++) {
-                int index1 = r.nextInt(nFusions);
-                int index2 = r.nextInt(nFusions);
-                fusions.add(new FusionGene(rpkm.get(index1).getTranscript(),
-                                           rpkm.get(index2).getTranscript()));
+            int[] distribution = new int[rpkm.size()];
+            int index = 0;
+            for(int i = 0; i < bin.size(); i++) {
+                IntArrayList b = bin.getBin(i);
+                b.trimToSize();
+                for(int j = 0; j < b.size(); j++) {
+                    distribution[index] = i;    
+                    index++;
+                }
+            }
+
+            for(int x = 0; x < nFusions; x++) {
+                int binIndex1 = distribution[r.nextInt(distribution.length)];
+                int binIndex2 = distribution[r.nextInt(distribution.length)];
+                IntArrayList b1 = bin.getBin(binIndex1);
+                IntArrayList b2 = bin.getBin(binIndex2);
+
+                fusions.add(new FusionGene(rpkm.get(b1.get(r.nextInt(b1.size()))).getTranscript(),
+                                           rpkm.get(b2.get(r.nextInt(b2.size()))).getTranscript()));
             }
         }
         
