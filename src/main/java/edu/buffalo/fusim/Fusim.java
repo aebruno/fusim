@@ -439,8 +439,8 @@ public class Fusim {
                              .create("h")
             );
         options.addOption(
-            OptionBuilder.withLongOpt("genemodel")
-                         .withDescription("Gene Model file")
+            OptionBuilder.withLongOpt("gene-model")
+                         .withDescription("Gene Model file in refFlat format")
                          .hasArg()
                          .create("g")
         );
@@ -451,8 +451,8 @@ public class Fusim {
                              .create("r")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("background")
-                             .withDescription("Path to BAM file containing background reads")
+                OptionBuilder.withLongOpt("background-reads")
+                             .withDescription("Path to BAM file containing background reads. Genes will be selected for fusions according to the read profile of the background reads.")
                              .hasArg()
                              .create("b")
             );
@@ -463,31 +463,31 @@ public class Fusim {
                              .create("n")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("text")
+                OptionBuilder.withLongOpt("text-output")
                              .withDescription("File name of text output")
                              .hasArg()
                              .create("t")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("fasta")
-                             .withDescription("File name of fasta output")
+                OptionBuilder.withLongOpt("fasta-output")
+                             .withDescription("File name of FASTA output")
                              .hasArg()
                              .create("f")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("cds")
+                OptionBuilder.withLongOpt("cds-only")
                              .withDescription("Only include CDS exons")
                              .create("c")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("readthrough")
+                OptionBuilder.withLongOpt("read-through")
                              .withDescription("Number of read through fusion genes")
                              .hasArg()
                              .create("x")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("cutoff")
-                             .withDescription("RPKM cutoff when using background BAM file")
+                OptionBuilder.withLongOpt("rpkm-cutoff")
+                             .withDescription("RPKM cutoff when using background BAM file. Genes below the cutoff will be ignored")
                              .hasArg()
                              .create("k")
             );
@@ -583,8 +583,8 @@ public class Fusim {
                              .create("B")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("fix-orientation")
-                             .withDescription("Fix orientation of genes selected for a fusion if located on different strands")
+                OptionBuilder.withLongOpt("auto-correct-orientation")
+                             .withDescription("Auto correct orientation of genes selected for a fusion if located on different strands")
                              .create("F")
             );
         options.addOption(
