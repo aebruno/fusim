@@ -251,18 +251,18 @@ public class Fusim {
         logger.info("------------------------------------------------------------------------");
         logger.info("Running Fusim with the following settings:");
         logger.info("------------------------------------------------------------------------");
-        logger.info("Input Gene Model file: "+geneModelFile.getAbsolutePath());
-        if(cmd.hasOption("n")) {
-            logger.info("Total number of generated fusions: "+nFusions);
-        }
-        if(cmd.hasOption("x")) {
-            logger.info("Total number of read through genes: "+nReadThrough);
-        }
+        logger.info("Reference Gene Model: "+geneModelFile.getAbsolutePath());
+        logger.info("Number of simulated fusion genes: "+nFusions);
+        logger.info("Number of read through genes: "+nReadThrough);
+        logger.info("Auto-correct orienation: "+(cmd.hasOption("F") ? "yes" : "no"));
         if(cmd.hasOption("t")) {
-            logger.info("Text Output file: "+cmd.getOptionValue("t"));
+            logger.info("Text Output: "+("-".equals(cmd.getOptionValue("t")) ? "stdout" : cmd.getOptionValue("t")));
         }
         if(cmd.hasOption("f")) {
-            logger.info("Fasta Output file: "+cmd.getOptionValue("f"));
+            logger.info("Fasta Output: "+("-".equals(cmd.getOptionValue("f")) ? "stdout" : cmd.getOptionValue("f")));
+        }
+        if(!cmd.hasOption("f") && !cmd.hasOption("t")) {
+            logger.info("Text Output: stdout");
         }
         if(cmd.hasOption("b")) {
             logger.info("-- Generating fusions based on background dataset --");
@@ -333,7 +333,7 @@ public class Fusim {
             }
             
             if(fastaOutput != null) {
-                fastaOutput.println(f.genFASTA(break1, break2, referenceFile, cmd.hasOption("c")));
+                fastaOutput.println(f.genFASTA(break1, break2, referenceFile, cmd.hasOption("c"), cmd.hasOption("F")));
             }
         }
         
@@ -528,6 +528,11 @@ public class Fusim {
                 OptionBuilder.withLongOpt("rpkm-bins")
                              .withDescription("Sort genes from background dataset into bins according to their RPKM values and generate a fusion from each bin.")
                              .create("B")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("fix-orientation")
+                             .withDescription("Fix orientation of genes selected for a fusion if located on different strands")
+                             .create("F")
             );
     }
 

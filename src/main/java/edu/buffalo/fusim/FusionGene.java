@@ -31,7 +31,7 @@ public class FusionGene {
         this.gene2 = gene2;
     }
     
-    public String genFASTA(int[] break1, int[] break2, File reference, boolean cdsExonsOnly) {
+    public String genFASTA(int[] break1, int[] break2, File reference, boolean cdsExonsOnly, boolean fixOrientation) {
         ExtractSeq extractSeq = new ExtractSeq(reference);
 
         StringBuffer fasta = new StringBuffer();
@@ -64,7 +64,11 @@ public class FusionGene {
         fasta.append(break1seq.toString());
         
         if(!gene1.getStrand().equals(gene2.getStrand())) {
-            fasta.append(ExtractSeq.reverseComplement(break2seq));
+            if(fixOrientation) {
+                fasta.append(ExtractSeq.reverseComplement(break2seq));
+            } else {
+                fasta.append(break2seq.toString());
+            }
         } else {
             fasta.append(break2seq.toString());   
         }
