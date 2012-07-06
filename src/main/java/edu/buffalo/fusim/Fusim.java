@@ -76,11 +76,11 @@ public class Fusim {
             if(!cmd.hasOption("i")) {
                 printHelpAndExit(options, "Please specify a path to a GTF/GFF file for conversion with option -i");
             }
-            if(!cmd.hasOption("O")) {
+            if(!cmd.hasOption("o")) {
                 printHelpAndExit(options, "Please specify an output filename with option -O");
             }
 
-            File outFile = new File(cmd.getOptionValue("O"));
+            File outFile = new File(cmd.getOptionValue("o"));
             File gtfFile = new File(cmd.getOptionValue("i"));
             if(!gtfFile.canRead()) {
                 printHelpAndExit(options, "Can't read input GTF file");
@@ -238,10 +238,10 @@ public class Fusim {
         }
         
         GeneSelectionMethod geneSelectioMethod = GeneSelectionMethod.UNIFORM;
-        if(cmd.hasOption("B")) {
-            GeneSelectionMethod sm = GeneSelectionMethod.fromString(cmd.getOptionValue("B"));
+        if(cmd.hasOption("m")) {
+            GeneSelectionMethod sm = GeneSelectionMethod.fromString(cmd.getOptionValue("m"));
             if(sm == null) {
-                printHelpAndExit(options, "Invalid gene selection method: "+cmd.getOptionValue("B"));
+                printHelpAndExit(options, "Invalid gene selection method: "+cmd.getOptionValue("m"));
             }
             geneSelectioMethod = sm;
         }
@@ -262,9 +262,9 @@ public class Fusim {
         logger.info("Reference Gene Model: "+geneModelFile.getAbsolutePath());
         logger.info("Number of simulated fusion genes: "+nFusions);
         logger.info("Number of read through genes: "+nReadThrough);
-        logger.info("Auto-correct orientation: "+(cmd.hasOption("F") ? "yes" : "no"));
-        logger.info("Allow fusion genes outside of ORF: "+(cmd.hasOption("o") ? "yes" : "no"));
-        logger.info("Force fusion breaks on exon boundries: "+(cmd.hasOption("s") ? "yes" : "no"));
+        logger.info("Auto-correct orientation: "+(cmd.hasOption("a") ? "yes" : "no"));
+        logger.info("Allow fusion genes outside of ORF: "+(cmd.hasOption("d") ? "yes" : "no"));
+        logger.info("Force fusion breaks on exon boundries: "+(cmd.hasOption("e") ? "yes" : "no"));
         if(cmd.hasOption("t")) {
             logger.info("Text Output: "+("-".equals(cmd.getOptionValue("t")) ? "<stdout>" : cmd.getOptionValue("t")));
         }
@@ -299,7 +299,7 @@ public class Fusim {
         }
         logger.info("------------------------------------------------------------------------");
         
-        GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("s"), cmd.hasOption("c"));
+        GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("e"), cmd.hasOption("c"));
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
@@ -339,7 +339,7 @@ public class Fusim {
             int[] break2 = f.getGene2().generateExonBreak(false, cmd.hasOption("c"));
 
             // Keep ORF (don't allow out of frame) and allow splitting of exons
-            if(!cmd.hasOption("o") && !cmd.hasOption("s")) {
+            if(!cmd.hasOption("d") && !cmd.hasOption("e")) {
                 // Ensure fusion gene is within ORF
                 int break1BaseCount = 0;
                 for(int i = 0; i < break1.length; i++) {
@@ -370,7 +370,7 @@ public class Fusim {
                     f.getGene2().getExons(cmd.hasOption("c")).get(break2[0])[1] -= break2BaseAdjust;
 
                 }
-            } else if(cmd.hasOption("s") && !cmd.hasOption("o")) {
+            } else if(cmd.hasOption("e") && !cmd.hasOption("d")) {
                 // Keep ORF (don't allow out of frame) and don't allow splitting of exons (keep exon boundries)
                 // Break gene 1 on exons boundries
                 break1 = f.getGene1().generateExonBoundryBreak(cmd.hasOption("c"));
@@ -385,7 +385,7 @@ public class Fusim {
             }
             
             if(fastaOutput != null) {
-                fastaOutput.println(f.outputFasta(break1, break2, referenceFile, cmd.hasOption("c"), cmd.hasOption("F")));
+                fastaOutput.println(f.outputFasta(break1, break2, referenceFile, cmd.hasOption("c"), cmd.hasOption("a")));
             }
         }
         
@@ -503,11 +503,6 @@ public class Fusim {
                              .create("z")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("illumina")
-                             .withDescription("Simulate Illumina Reads with ART")
-                             .create("U")
-            );
-        options.addOption(
                 OptionBuilder.withLongOpt("gtf")
                              .withDescription("Input GTF file for conversion")
                              .hasArg()
@@ -517,85 +512,28 @@ public class Fusim {
                 OptionBuilder.withLongOpt("output")
                              .withDescription("Output refFlat file for conversion")
                              .hasArg()
-                             .create("O")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("art")
-                             .withDescription("Path to ART binary for simulating Illumina reads from fusion genes")
-                             .hasArg()
-                             .create("A")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("prefix")
-                             .withDescription("Prefix of output files from ART for simulating Illumina reads")
-                             .hasArg()
-                             .create("y")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("readlength")
-                             .withDescription("Length of reads to be simulated from ART for simulating Illumina reads")
-                             .hasArg()
-                             .create("l")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("meanfrag")
-                             .withDescription("Mean size of DNA fragments for paired-end reads from ART for simulating Illumina reads")
-                             .hasArg()
-                             .create("M")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("coverage")
-                             .withDescription("The fold of read coverage to be simulated using ART for simulating Illumina reads")
-                             .hasArg()
-                             .create("d")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("paired")
-                             .withDescription("Simulate paired-end reads using ART for simulating Illumina reads")
-                             .create("e")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("bowtie")
-                             .withDescription("Path to bowtie binary for aligning simulated Illumina reads")
-                             .hasArg()
-                             .create("S")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("index")
-                             .withDescription("basename of bowtie index it use in aligning simulated reads")
-                             .hasArg()
-                             .create("v")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("align")
-                             .withDescription("Align simulated reads from ART using bowtie")
-                             .create("j")
-            );
-        options.addOption(
-                OptionBuilder.withLongOpt("merge")
-                             .withDescription("Merge aligned fusion reads to background dataset")
-                             .create("q")
+                             .create("o")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene-selection-method")
                              .withDescription("Method to use when selecting genes for fusions: uniform|empirical|binned")
                              .hasArg()
-                             .create("B")
+                             .create("m")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("auto-correct-orientation")
                              .withDescription("Auto correct orientation of genes selected for a fusion if located on different strands")
-                             .create("F")
+                             .create("a")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("out-of-frame")
                              .withDescription("Allow fusion genes outside of reading frames")
-                             .create("o")
+                             .create("d")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("keep-exon-boundries")
                              .withDescription("Generate fusion breaks on exon boundries only")
-                             .create("s")
+                             .create("e")
             );
     }
 
