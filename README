@@ -15,15 +15,6 @@ Requirements
 - samtools (for indexing only)
 
 -------------------------------------------------------------------------
-Optional Software Requirements
--------------------------------------------------------------------------
-
-- ART: To simulate next-generation sequencing reads from generated fusions
-  genes. http://www.niehs.nih.gov/research/resources/software/biostatistics/art/
-
-- Bowtie: align simulated reads from fusion genes. http://bowtie-bio.fs.net/
-
--------------------------------------------------------------------------
 Setup
 -------------------------------------------------------------------------
 
@@ -57,7 +48,7 @@ Basic Usage
 
 - Generate Fusion genes using UCSC refFlat.txt gene model:
 
-  $ java -jar fusim.jar --genemodel refFlat.txt --fusions 10
+  $ java -jar fusim.jar --gene-model refFlat.txt --fusions 10
 
 - Output to both FASTA and TXT format:
 
@@ -65,11 +56,11 @@ Basic Usage
   $ samtools faidx hg19.fa
 
   $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
+         --gene-model=refFlat.txt \
          --fusions=10 \
          --reference=hg19.fa \
-         --fasta=fusions.fasta \
-         --text=fusions.txt
+         --fasta-output=fusions.fasta \
+         --text-output=fusions.txt
 
 - Generate Fusion genes based on a background dataset (BAM file) using RPKM
   cutoff of 0.2. Note background BAM files must be indexed (*.bam.bai):
@@ -78,24 +69,24 @@ Basic Usage
   $ samtools index myreads.bam
 
   $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
+         --gene-model=refFlat.txt \
          --fusions=10 \
          --background=myreads.bam \
-         --cutoff=0.2
+         --rpkm-cutoff=0.2
 
 - Generate read through genes:
 
   $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
+         --gene-model=refFlat.txt \
          --fusions=10 \
-         --readthrough=10
+         --read-through=10
 
 - Only use CDS exons when generating fusion genes:
 
   $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
+         --gene-model=refFlat.txt \
          --fusions=10 \
-         --cds
+         --cds-only
 
 -------------------------------------------------------------------------
 Working with GFF/GTF format
@@ -106,80 +97,6 @@ Working with GFF/GTF format
 
 - Then run fusim using the converted refFlat file:
   $ java -jar fusim.jar -g gencodeRefFlat.txt -n 10
-
--------------------------------------------------------------------------
-Simulate Illumina NGS reads using ART
--------------------------------------------------------------------------
-
-- First build and compile ART. Sources can be downloaded from:
-   http://www.niehs.nih.gov/research/resources/software/biostatistics/art/
-
-  # Be sure the art_illumina binary is in your PATH or use --art option to
-  # specify the path
-  $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
-         --fusions=10 \
-         --reference=hg19.fa \
-         --fasta=fusions.fasta \
-         --illumina
-
--------------------------------------------------------------------------
-Align Illumina NGS reads using bowtie to a reference genome
--------------------------------------------------------------------------
-
-- First ensure you have bowtie working. Installing and building bowtie indexes
-  is out of the scope of this document. It is assumed you have a working bowtie
-  installation and that you have the correct bowtie indexes installed for your
-  genome in the "indexes" subdirectory. More information on setting up bowtie
-  can be found here: http://bowtie-bio.sf.net
-
-- Ensure you have the correct bowtie indexes for your reference genome. These
-  should be installed in a subdirectory called "indexes" of your current
-  working directory.
-
-  # Be sure the bowtie binary is in your PATH or use --bowtie option to specify
-  # the path
-  $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
-         --fusions=10 \
-         --reference=hg19.fa \
-         --fasta=fusions.fasta \
-         --illumina \
-         --align \
-         --index=hg19
-
--------------------------------------------------------------------------
-Align Illumina NGS reads using bowtie and merge with a background dataset
--------------------------------------------------------------------------
-
-- This feature allows for "injecting" simulated reads from fusion genes into an
-  existing background data set. See the steps above for additional details
-  simulating reads using ART and aligning using bowtie.
-
-  $ java -jar fusim.jar \
-         --genemodel=refFlat.txt \
-         --fusions=10 \
-         --reference=hg19.fa \
-         --fasta=fusions.fasta \
-         --text=fusions.key \
-         --illumina \
-         --align \
-         --index=hg19 \
-         --background=myreads.bam \
-         --cutoff=0.2 \
-         --merge
-
--------------------------------------------------------------------------
-KNOWN BUGS
--------------------------------------------------------------------------
-
-- If a generated fusion gene is small (~145 bp) ART fails to generate reads.
-  For example, ART will hang when attempting to generate paired-end reads from
-  this simulated fusion gene:
-
->ref|NR_003207-NR_003208 fusionGene=SNORD114-14-SNORD114-15 break1=chr14:101438440-101438513 break2=chr14:101439007-101439077
-TGGACCAATGATGACAACTGCCGGCGTATGAGTGTTGGGTGATGAATAATACGTGTCTAGAACTCTGAGGTCCATGGAT
-CGATGATGACCACTGGTGGCGTATGAGTCATACATGATGAATATGTGTCTGGAACTCTGAGGTCCT
 
 -------------------------------------------------------------------------
 Authors
