@@ -17,6 +17,8 @@
 package edu.buffalo.fusim;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -77,39 +79,46 @@ public class FusionGene {
         return fasta.toString();
     }
     
+    private List<String> createTxtColumns(TranscriptRecord gene, int[] breaks, boolean cdsExonsOnly) {
+        List<String> cols = new ArrayList<String>();
+        cols.add(gene1.getGeneId()+"-"+gene2.getGeneId());
+        cols.add(gene.getGeneId());
+        cols.add(gene.getTranscriptId());
+        cols.add(gene.getChrom());
+        cols.add(gene.getStrand().toString());
+        cols.add(""+breaks.length);
+
+        int[] exonStarts = new int[breaks.length];
+        int[] exonEnds = new int[breaks.length];
+        int exonBases = 0;
+        for(int i = 0; i < breaks.length; i++) {
+            int[] exon = gene.getExons(cdsExonsOnly).get(breaks[i]);
+            exonStarts[i] = (exon[0]+1);
+            exonEnds[i] = exon[1];
+            exonBases += exon[1]-exon[0];
+        }
+
+        cols.add(""+exonBases);
+        cols.add(StringUtils.join(ArrayUtils.toObject(breaks), ","));
+        cols.add(StringUtils.join(ArrayUtils.toObject(exonStarts), ","));
+        cols.add(StringUtils.join(ArrayUtils.toObject(exonEnds), ","));
+
+        return cols;
+    }
+
     public String outputText(int[] break1, int[] break2, boolean cdsExonsOnly) {
         StringBuffer txt = new StringBuffer();
-        
-        txt.append(gene1.getGeneId()+"-"+gene2.getGeneId()+"\t");
-        
-        txt.append(StringUtils.join(new String[]{
-                gene1.getTranscriptId(), gene1.getGeneId(), StringUtils.join(ArrayUtils.toObject(break1), ","), gene1.getStrand().toString(),
-                gene1.getChrom()+":"
-                }, "\t"));
-        
-        for(int i = 0; i < break1.length; i++) {
-            int[] exon = gene1.getExons(cdsExonsOnly).get(break1[i]);
-            txt.append((exon[0]+1)+"-"+exon[1]);
-            if(i != (break1.length-1)) txt.append(",");
-        }
-        txt.append("\t");
-        txt.append(StringUtils.join(new String[]{
-                gene2.getTranscriptId(), gene2.getGeneId(), StringUtils.join(ArrayUtils.toObject(break2), ","), gene2.getStrand().toString(),
-                gene2.getChrom()+":"
-                }, "\t"));
-        for(int i = 0; i < break2.length; i++) {
-            int[] exon = gene2.getExons(cdsExonsOnly).get(break2[i]);
-            txt.append((exon[0]+1)+"-"+exon[1]);
-            if(i != (break2.length-1)) txt.append(",");
-        }
-        
+
+        txt.append(StringUtils.join(this.createTxtColumns(gene1, break1, cdsExonsOnly), "\t")+"\n");
+        txt.append(StringUtils.join(this.createTxtColumns(gene2, break2, cdsExonsOnly), "\t")+"\n");
+
         return txt.toString();
     }
     
     public static String[] getHeader() {
         return new String[]{
-                "fusionGene", "transcript1", "gene1", "exons1", "strand1", "break1",
-                "transcript2", "gene2", "exons2", "strand2", "break2"
+                "fusionGene", "geneName", "name", "chrom", "strand", "exonCount",
+                "exonBases", "exonIndexes", "exonStarts", "exonEnds"
                 };
     }
     
