@@ -381,11 +381,11 @@ public class Fusim {
             }
             
             if(textOutput != null) {
-                textOutput.println(f.genTXT(break1, break2, cmd.hasOption("c")));
+                textOutput.println(f.outputText(break1, break2, cmd.hasOption("c")));
             }
             
             if(fastaOutput != null) {
-                fastaOutput.println(f.genFASTA(break1, break2, referenceFile, cmd.hasOption("c"), cmd.hasOption("F")));
+                fastaOutput.println(f.outputFasta(break1, break2, referenceFile, cmd.hasOption("c"), cmd.hasOption("F")));
             }
         }
         
