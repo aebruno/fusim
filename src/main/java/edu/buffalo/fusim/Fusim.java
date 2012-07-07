@@ -124,32 +124,17 @@ public class Fusim {
             textOutput = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
         }
 
-        if(cmd.hasOption("U") && !cmd.hasOption("f")) {
-            printHelpAndExit(options, "You must provide an output FASTA file for simulating Illumina reads");
-        }
-        
         if(cmd.hasOption("f") && !cmd.hasOption("r")) {
             printHelpAndExit(options, "You must provide an indexed (.fai) genome reference file for FASTA output using option \"-r\".");
         }
 
-        if(cmd.hasOption("j") && !cmd.hasOption("v")) {
-            printHelpAndExit(options, "Missing basename for bowtie index.");
-        }
-
-        if(cmd.hasOption("q") && !cmd.hasOption("b")) {
-            printHelpAndExit(options, "Missing background BAM file to merge with.");
-        }
-
         File referenceFile = null;
-        
         if(cmd.hasOption("r")) {
             referenceFile = new File(cmd.getOptionValue("r"));
         }
-        
         if(cmd.hasOption("f") && !referenceFile.canRead()) {
             printHelpAndExit(options, "Please provide a valid reference file in fasta format");
         } 
-        
         if(cmd.hasOption("f")) {
             File referenceIndexFile = new File(referenceFile.getAbsolutePath() + ".fai");
             if(!referenceIndexFile.canRead()) {
@@ -166,7 +151,7 @@ public class Fusim {
                 printHelpAndExit(options, "Number of fusions (-n) must be a number");
             }
         }
-        
+
         int nReadThrough = 0;
         if(cmd.hasOption("x")) {
             try {
@@ -175,7 +160,7 @@ public class Fusim {
                 printHelpAndExit(options, "Number of read through fusion genes (-x) must be a number");
             }
         }
-
+        
         int nThreads = Runtime.getRuntime().availableProcessors();
         if(cmd.hasOption("p")) {
             try {
@@ -183,48 +168,6 @@ public class Fusim {
             } catch(NumberFormatException e) {
                 printHelpAndExit(options, "Number of threads to spawn (-p) must be a number");
             }
-        }
-
-        int readLength = 75;
-        if(cmd.hasOption("l")) {
-            try {
-                readLength = Integer.parseInt(cmd.getOptionValue("l"));
-            } catch(NumberFormatException e) {
-                printHelpAndExit(options, "Read length (-l) must be a number");
-            }
-        }
-
-        int meanFrag = 400;
-        if(cmd.hasOption("M")) {
-            try {
-                meanFrag = Integer.parseInt(cmd.getOptionValue("M"));
-            } catch(NumberFormatException e) {
-                printHelpAndExit(options, "Mean DNA fragment length (-m) must be a number");
-            }
-        }
-
-        int readCoverage = 10;
-        if(cmd.hasOption("d")) {
-            try {
-                readCoverage = Integer.parseInt(cmd.getOptionValue("d"));
-            } catch(NumberFormatException e) {
-                printHelpAndExit(options, "Read coverage (-l) must be a number");
-            }
-        }
-
-        String artPrefix = "fusion-reads";
-        if(cmd.hasOption("y")) {
-            artPrefix = cmd.getOptionValue("y");
-        }
-
-        String artPath = ReadSimulator.DEFAULT_ART_BIN;
-        if(cmd.hasOption("A")) {
-            artPath = cmd.getOptionValue("A");
-        }
-
-        String bowtiePath = BowtieAlignment.DEFAULT_BOWTIE_BIN;
-        if(cmd.hasOption("S")) {
-            bowtiePath = cmd.getOptionValue("S");
         }
 
         double rpkmCutoff = 0.2;
@@ -280,22 +223,6 @@ public class Fusim {
             logger.info("RPKM cutoff: "+rpkmCutoff);
             logger.info("Number of threads: "+nThreads);
             logger.info("Gene selection method: "+geneSelectioMethod.toString());
-        }
-        if(cmd.hasOption("U")) {
-            logger.info("-- Simulating Illumina reads using ART --");
-            logger.info("ART Path: "+artPath);
-            logger.info("ART output prefix: "+artPrefix);
-            logger.info("Read length: "+readLength);
-            logger.info("Mean DNA Fragment length: "+meanFrag);
-            logger.info("The fold of read coverage: "+readCoverage);
-            logger.info("Paired-end reads?: "+(cmd.hasOption("e") ? "Yes" : "No"));
-        }
-        if(cmd.hasOption("j")) {
-            logger.info("-- Aligning simulated Illumina reads using bowtie --");
-            logger.info("Bowtie Path: "+bowtiePath);
-            logger.info("Bowtie index: "+cmd.getOptionValue("v"));
-            logger.info("Alignment threads: "+nThreads);
-            logger.info("Paired-end alignment?: "+(cmd.hasOption("e") ? "Yes" : "No"));
         }
         logger.info("------------------------------------------------------------------------");
         
@@ -393,38 +320,6 @@ public class Fusim {
         
         if(textOutput != null) textOutput.flush();
         if(fastaOutput != null) fastaOutput.flush();
-
-        if(cmd.hasOption("U")) {
-            logger.info("Simulating Illumina reads using ART...");
-            ReadSimulator s = new ReadSimulator();
-            s.run(artPath, new File(cmd.getOptionValue("f")), artPrefix, readLength, meanFrag, readCoverage, cmd.hasOption("e"));
-            if(cmd.hasOption("j")) {
-                logger.info("Aligning simulated Illumina reads using bowtie...");
-                BowtieAlignment b = new BowtieAlignment();
-                if(cmd.hasOption("e")) {
-                    b.run(bowtiePath, cmd.getOptionValue("v"), 
-                            new File(artPrefix+"1.fq"), 
-                            new File(artPrefix+"2.fq"), 
-                            new File(artPrefix+".sam"),
-                            nThreads);
-                } else {
-                    b.run(bowtiePath, cmd.getOptionValue("v"), 
-                            new File(artPrefix+".fq"), 
-                            new File(artPrefix+".sam"),
-                            nThreads);
-                }
-                if(cmd.hasOption("q")) {
-                    logger.info("Merging with background BAM file...");
-                    MergeSamFiles merge = new MergeSamFiles();
-                    // XXX need to add check for exit value here
-                    int exitValue = merge.instanceMain(new String[]{
-                        "INPUT="+bamFile.getAbsolutePath(),
-                        "INPUT="+artPrefix+".sam",
-                        "OUTPUT="+artPrefix+"-merged.bam"
-                    });
-                }
-            }
-        }
 
         logger.info("Fusim run complete. Goodbye!");
     }
