@@ -239,18 +239,18 @@ public class Fusim {
         }
         logger.info("------------------------------------------------------------------------");
         
-        GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("e"), cmd.hasOption("c"));
+        GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("e"), cmd.hasOption("c"), limit);
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads);
+            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads, limit);
         } else {
-            fg = new RandomGenerator(parser);
+            fg = new RandomGenerator(parser, limit);
         }
         
         logger.info("Starting fusion gene simulation...");
         long tstart = System.currentTimeMillis();
-        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions, geneSelectioMethod, limit);
+        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions, geneSelectioMethod);
         long tend = System.currentTimeMillis();
         
         logger.info("Simulation complete.");
@@ -261,7 +261,7 @@ public class Fusim {
         if(nReadThrough > 0) {
             logger.info("Generating read through genes...");
             ReadThroughGenerator rt = new ReadThroughGenerator(parser);
-            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough, geneSelectioMethod, limit);
+            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough, geneSelectioMethod);
             fusions.addAll(rtFusions);
         }
 

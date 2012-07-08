@@ -28,19 +28,21 @@ import edu.buffalo.fusim.gtf.GTFParseException;
 
 public class RandomGenerator implements FusionGenerator {
     private GeneModelParser parser;
+    private Map<String,Boolean> limit;
 
-    public RandomGenerator(GeneModelParser parser) {
+    public RandomGenerator(GeneModelParser parser, Map<String,Boolean> limit) {
         this.parser = parser;
+        this.limit = limit;
     }
 
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method, Map<String, Boolean> limit) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
         List<FusionGene> list = new ArrayList<FusionGene>();
         Random r = new Random();
 
         //XXX only read entire gene model file into memory if we have to (ex. for limits)
         if(limit != null) {
             ReadThroughGenerator rt = new ReadThroughGenerator(parser);
-            List<TranscriptRecord> transcripts = rt.parseTranscripts(gtfFile, limit);
+            List<TranscriptRecord> transcripts = rt.parseTranscripts(gtfFile);
             if(transcripts.size() < 2) {
                 return list;
             }
@@ -96,7 +98,7 @@ public class RandomGenerator implements FusionGenerator {
     }
 
     public static void main(String[] args) throws Exception {
-        RandomGenerator g = new RandomGenerator(new UCSCRefFlatParser());
-        System.out.println(g.generate(new File("data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM, null));
+        RandomGenerator g = new RandomGenerator(new UCSCRefFlatParser(), null);
+        System.out.println(g.generate(new File("data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM));
     }
 }

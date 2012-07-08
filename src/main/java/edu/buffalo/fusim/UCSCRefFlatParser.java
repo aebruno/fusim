@@ -5,26 +5,33 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import edu.buffalo.fusim.gtf.GTFParseException;
 
 public class UCSCRefFlatParser implements GeneModelParser {
     private boolean keepExonBoundries;
     private boolean cdsOnly;
+    private Map<String, Boolean> limit;
 
     public UCSCRefFlatParser() {
         this.keepExonBoundries = false;
         this.cdsOnly = false;
+        this.limit = null;
     }
 
-    public UCSCRefFlatParser(boolean keepExonBoundries, boolean cdsOnly) {
+    public UCSCRefFlatParser(boolean keepExonBoundries, boolean cdsOnly, Map<String,Boolean> limit) {
         this.keepExonBoundries = keepExonBoundries;
         this.cdsOnly = cdsOnly;
+        this.limit = limit;
     }
 
     public TranscriptRecord parseLine(String line) throws GTFParseException {
         String[] fields = line.split("\t");
         TranscriptRecord record = TranscriptRecord.fromRefFlat(fields);
+        
+        //XXX skip the haplotypes and unassembled chroms
+        if(record.getChrom().contains("_")) return null;
 
         if(record.getExonBases() == 0) return null;
 
@@ -33,6 +40,10 @@ public class UCSCRefFlatParser implements GeneModelParser {
         if(keepExonBoundries && record.getValidExonBoundryBreaks(cdsOnly).size() == 0) {
             return null;
         }
+
+        if(limit != null && 
+          !limit.containsKey(record.getGeneId()) &&
+          !limit.containsKey(record.getTranscriptId())) return null;
 
         return record;
     }

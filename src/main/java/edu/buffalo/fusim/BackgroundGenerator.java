@@ -52,20 +52,22 @@ public class BackgroundGenerator implements FusionGenerator {
     private File backgroundFile;
     private double rpkmCutoff;
     private int threads;
+    private Map<String, Boolean> limit;
 
-    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff, int threads) {
+    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff, int threads, Map<String,Boolean> limit) {
         this.parser = parser;
         this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
         this.backgroundFile = backgroundFile;
         this.rpkmCutoff = rpkmCutoff;
         this.threads = threads;
+        this.limit = limit;
     }
 
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method, Map<String,Boolean> limit) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
         logger.info("Processing background reads...");
         logger.info("Computing RPKM values using " + threads + " threads...");
 
-        GeneModelProducer producer = new GeneModelProducer(gtfFile, limit);
+        GeneModelProducer producer = new GeneModelProducer(gtfFile);
         producer.start();
 
         // Leave one thread for the GTF producer
@@ -223,11 +225,9 @@ public class BackgroundGenerator implements FusionGenerator {
         private Log log = LogFactory.getLog(GeneModelProducer.class);
 
         private File gtfFile;
-        private Map<String,Boolean> limit;
 
-        public GeneModelProducer(File gtfFile, Map<String, Boolean> limit) {
+        public GeneModelProducer(File gtfFile) {
             this.gtfFile = gtfFile;
-            this.limit = limit;
         }
 
         public void run() {
@@ -246,13 +246,6 @@ public class BackgroundGenerator implements FusionGenerator {
                     try {
                         feature = parser.parseLine(line);
                         if(feature == null) continue;
-
-                        //XXX skip the haplotypes and unassembled chroms
-                        if(feature.getChrom().contains("_")) continue;
-
-                        if(limit != null && 
-                          !limit.containsKey(feature.getGeneId()) &&
-                          !limit.containsKey(feature.getTranscriptId())) continue;
 
                         queue.put(feature);
                     } catch (InterruptedException e) {
