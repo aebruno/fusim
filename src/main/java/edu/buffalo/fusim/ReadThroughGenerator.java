@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import edu.buffalo.fusim.gtf.GTFParseException;
@@ -21,13 +22,17 @@ public class ReadThroughGenerator implements FusionGenerator {
         this.parser = parser;
     }
         
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
-        List<TranscriptRecord> transcripts = this.parseTranscripts(gtfFile);
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method, Map<String, Boolean> limit) {
+        List<FusionGene> list = new ArrayList<FusionGene>();
+
+        List<TranscriptRecord> transcripts = this.parseTranscripts(gtfFile, limit);
+        if(transcripts.size() == 0) {
+            return list;
+        }
         Collections.sort(transcripts, new TranscriptCompare());
         
         Random r = new Random();
 
-        List<FusionGene> list = new ArrayList<FusionGene>();
         for (int i = 0; i < nFusions; i++) {
             int index = r.nextInt(transcripts.size()-1);
             
@@ -70,7 +75,7 @@ public class ReadThroughGenerator implements FusionGenerator {
         }
     }
     
-    private List<TranscriptRecord> parseTranscripts(File gtfFile) {
+    protected List<TranscriptRecord> parseTranscripts(File gtfFile, Map<String, Boolean> limit) {
         List<TranscriptRecord> transcripts = new ArrayList<TranscriptRecord>();
         
         // XXX Use Java NIO for reading File. Requires Java 7
@@ -89,6 +94,11 @@ public class ReadThroughGenerator implements FusionGenerator {
                 //XXX skip the haplotypes and unassembled chroms
                 if(record.getChrom().contains("_")) continue;
 
+
+                if(limit != null && 
+                  !limit.containsKey(record.getGeneId()) &&
+                  !limit.containsKey(record.getTranscriptId())) continue;
+
                 transcripts.add(record);
             }
         } catch (IOException e) {
@@ -102,7 +112,7 @@ public class ReadThroughGenerator implements FusionGenerator {
     
     public static void main(String[] args) throws Exception {
         ReadThroughGenerator g = new ReadThroughGenerator(new UCSCRefFlatParser());
-        System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM));
+        System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM, null));
     }
 
 }

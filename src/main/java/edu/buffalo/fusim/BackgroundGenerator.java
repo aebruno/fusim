@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -60,11 +61,11 @@ public class BackgroundGenerator implements FusionGenerator {
         this.threads = threads;
     }
 
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method, Map<String,Boolean> limit) {
         logger.info("Processing background reads...");
         logger.info("Computing RPKM values using " + threads + " threads...");
 
-        GeneModelProducer producer = new GeneModelProducer(gtfFile);
+        GeneModelProducer producer = new GeneModelProducer(gtfFile, limit);
         producer.start();
 
         // Leave one thread for the GTF producer
@@ -93,14 +94,21 @@ public class BackgroundGenerator implements FusionGenerator {
                 rpkm.add(r);
             }
         }
+
+        List<FusionGene> fusions = new ArrayList<FusionGene>();
+        if(rpkm.size() == 0) return fusions;
         
         Collections.sort(rpkm, new RPKMCompare());
         
-        List<FusionGene> fusions = new ArrayList<FusionGene>();
-
         // First bin genes into RPKM buckets
         BinGenes bin = new BinGenes(nFusions);
         bin.fill(rpkm);
+
+        //XXX currently only allow uniform selection method when limits are in place
+        if(limit != null) {
+            method = GeneSelectionMethod.UNIFORM;
+            logger.warn("Forcing uniform gene selection method when using limit option...");
+        }
 
         if(GeneSelectionMethod.BINNED.equals(method)) {
             logger.info("Generating fusions using RPKM bins...");
@@ -138,8 +146,8 @@ public class BackgroundGenerator implements FusionGenerator {
             logger.info("Generating fusions based on uniform distribution...");
             Random r = new Random();
             for(int i = 0; i < nFusions; i++) {
-                int index1 = r.nextInt(nFusions);
-                int index2 = r.nextInt(nFusions);
+                int index1 = r.nextInt(rpkm.size());
+                int index2 = r.nextInt(rpkm.size());
                 fusions.add(new FusionGene(rpkm.get(index1).getTranscript(),
                                            rpkm.get(index2).getTranscript()));
             }
@@ -177,15 +185,19 @@ public class BackgroundGenerator implements FusionGenerator {
         private int binsize;
         
         public BinGenes(int binsize) {
-            this.bins = new IntArrayList[binsize];
-            for(int i = 0; i < binsize; i++) {
-                bins[i] = new IntArrayList();
-            }
             this.binsize = binsize;
         }
         
         public void fill(List<RPKM> values) {
-            //XXX fix this.. wtf. note values needs to be sorted
+            if(values.size() < binsize) {
+                this.binsize = 1;
+            }
+
+            this.bins = new IntArrayList[binsize];
+            for(int i = 0; i < binsize; i++) {
+                bins[i] = new IntArrayList();
+            }
+
             int inc = (int)Math.ceil(values.size()/binsize);
             int binI = 0;
             for(int i = 0; i < values.size(); i++) {
@@ -211,9 +223,11 @@ public class BackgroundGenerator implements FusionGenerator {
         private Log log = LogFactory.getLog(GeneModelProducer.class);
 
         private File gtfFile;
+        private Map<String,Boolean> limit;
 
-        public GeneModelProducer(File gtfFile) {
+        public GeneModelProducer(File gtfFile, Map<String, Boolean> limit) {
             this.gtfFile = gtfFile;
+            this.limit = limit;
         }
 
         public void run() {
@@ -235,6 +249,11 @@ public class BackgroundGenerator implements FusionGenerator {
 
                         //XXX skip the haplotypes and unassembled chroms
                         if(feature.getChrom().contains("_")) continue;
+
+                        if(limit != null && 
+                          !limit.containsKey(feature.getGeneId()) &&
+                          !limit.containsKey(feature.getTranscriptId())) continue;
+
                         queue.put(feature);
                     } catch (InterruptedException e) {
                         log.fatal("InterruptedException while adding to queue: "

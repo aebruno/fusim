@@ -18,9 +18,10 @@ package edu.buffalo.fusim;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public interface FusionGenerator {
     
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method);
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method, Map<String,Boolean> limit);
 
 }

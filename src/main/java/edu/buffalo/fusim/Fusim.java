@@ -21,7 +21,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.sf.picard.sam.MergeSamFiles;
 
@@ -189,6 +191,17 @@ public class Fusim {
             geneSelectioMethod = sm;
         }
 
+        Map<String, Boolean> limit = null;
+        if(cmd.hasOption("l")) {
+            limit = new HashMap<String,Boolean>();
+            String[] limits = cmd.getOptionValue("l").split(",");
+            if(limits.length < 2) {
+                printHelpAndExit(options, "Must provide a limit of at least two genes (ex. gene1,gene2,..): "+cmd.getOptionValue("l"));
+            }
+            for(int i = 0; i < limits.length; i++) {
+                limit.put(limits[i], true);
+            }
+        }
         
         File bamFile = null;
         if(cmd.hasOption("b")) {
@@ -237,7 +250,7 @@ public class Fusim {
         
         logger.info("Starting fusion gene simulation...");
         long tstart = System.currentTimeMillis();
-        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions, geneSelectioMethod);
+        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions, geneSelectioMethod, limit);
         long tend = System.currentTimeMillis();
         
         logger.info("Simulation complete.");
@@ -248,8 +261,12 @@ public class Fusim {
         if(nReadThrough > 0) {
             logger.info("Generating read through genes...");
             ReadThroughGenerator rt = new ReadThroughGenerator(parser);
-            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough, geneSelectioMethod);
+            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough, geneSelectioMethod, limit);
             fusions.addAll(rtFusions);
+        }
+
+        if(fusions.size() == 0) {
+            fatalError("No genes found to simulate fusions!");    
         }
         
         if(textOutput != null) {
@@ -308,7 +325,7 @@ public class Fusim {
             }
             
             if(textOutput != null) {
-                textOutput.println(f.outputText(break1, break2, cmd.hasOption("c")));
+                textOutput.print(f.outputText(break1, break2, cmd.hasOption("c")));
             }
             
             if(fastaOutput != null) {
@@ -429,6 +446,12 @@ public class Fusim {
                 OptionBuilder.withLongOpt("keep-exon-boundries")
                              .withDescription("Generate fusion breaks on exon boundries only")
                              .create("e")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("limit")
+                             .withDescription("Limit fusions to genes/transcripts")
+                             .hasArg()
+                             .create("l")
             );
     }
 

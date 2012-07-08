@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import edu.buffalo.fusim.gtf.GTFParseException;
@@ -32,10 +33,25 @@ public class RandomGenerator implements FusionGenerator {
         this.parser = parser;
     }
 
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
+    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method, Map<String, Boolean> limit) {
         List<FusionGene> list = new ArrayList<FusionGene>();
         Random r = new Random();
-        
+
+        //XXX only read entire gene model file into memory if we have to (ex. for limits)
+        if(limit != null) {
+            ReadThroughGenerator rt = new ReadThroughGenerator(parser);
+            List<TranscriptRecord> transcripts = rt.parseTranscripts(gtfFile, limit);
+            if(transcripts.size() == 0) {
+                return list;
+            }
+            for (int i = 0; i < nFusions; i++) {
+                list.add(new FusionGene(transcripts.get(r.nextInt(transcripts.size()-1)),
+                                        transcripts.get(r.nextInt(transcripts.size()-1))));
+            }
+            return list;
+        }
+
+        // Otherwise we randomly seek the file
         try {
             RandomAccessFile raf = new RandomAccessFile(gtfFile, "r");
             for (int i = 0; i < nFusions; i++) {
@@ -81,6 +97,6 @@ public class RandomGenerator implements FusionGenerator {
 
     public static void main(String[] args) throws Exception {
         RandomGenerator g = new RandomGenerator(new UCSCRefFlatParser());
-        System.out.println(g.generate(new File("data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM));
+        System.out.println(g.generate(new File("data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM, null));
     }
 }
