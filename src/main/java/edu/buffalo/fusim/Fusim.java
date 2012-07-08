@@ -449,7 +449,7 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("limit")
-                             .withDescription("Limit fusions to genes/transcripts")
+                             .withDescription("Limit fusions to specific genes/transcripts")
                              .hasArg()
                              .create("l")
             );
