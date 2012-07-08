@@ -79,9 +79,6 @@ public class RandomGenerator implements FusionGenerator {
             try {
                 record = parser.parseLine(line);
                 if(record == null) continue;
-                
-                //XXX skip the haplotypes and unassembled chroms
-                if(record.getChrom().contains("_")) continue;
             } catch (GTFParseException e) {
                 // XXX ignored for now;
             }
