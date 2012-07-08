@@ -41,12 +41,12 @@ public class RandomGenerator implements FusionGenerator {
         if(limit != null) {
             ReadThroughGenerator rt = new ReadThroughGenerator(parser);
             List<TranscriptRecord> transcripts = rt.parseTranscripts(gtfFile, limit);
-            if(transcripts.size() == 0) {
+            if(transcripts.size() < 2) {
                 return list;
             }
             for (int i = 0; i < nFusions; i++) {
-                list.add(new FusionGene(transcripts.get(r.nextInt(transcripts.size()-1)),
-                                        transcripts.get(r.nextInt(transcripts.size()-1))));
+                list.add(new FusionGene(transcripts.get(r.nextInt(transcripts.size())),
+                                        transcripts.get(r.nextInt(transcripts.size()))));
             }
             return list;
         }

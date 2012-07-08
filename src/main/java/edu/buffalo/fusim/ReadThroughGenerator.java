@@ -26,7 +26,7 @@ public class ReadThroughGenerator implements FusionGenerator {
         List<FusionGene> list = new ArrayList<FusionGene>();
 
         List<TranscriptRecord> transcripts = this.parseTranscripts(gtfFile, limit);
-        if(transcripts.size() == 0) {
+        if(transcripts.size() < 2) {
             return list;
         }
         Collections.sort(transcripts, new TranscriptCompare());
@@ -71,7 +71,14 @@ public class ReadThroughGenerator implements FusionGenerator {
             int res = o1.getChrom().compareTo(o2.getChrom());
             if (res != 0) return res;
             
-            return Double.compare(o1.getTxStart(), o2.getTxStart());
+            return Integer.compare(o1.getTxStart(), o2.getTxStart());
+        }
+    }
+
+    protected static class TranscriptLenCompare implements Comparator<TranscriptRecord> {
+        
+        public int compare(TranscriptRecord o1, TranscriptRecord o2) {
+            return Integer.compare(o1.getExonBases(), o2.getExonBases());
         }
     }
     
@@ -94,7 +101,6 @@ public class ReadThroughGenerator implements FusionGenerator {
                 //XXX skip the haplotypes and unassembled chroms
                 if(record.getChrom().contains("_")) continue;
 
-
                 if(limit != null && 
                   !limit.containsKey(record.getGeneId()) &&
                   !limit.containsKey(record.getTranscriptId())) continue;
@@ -112,7 +118,12 @@ public class ReadThroughGenerator implements FusionGenerator {
     
     public static void main(String[] args) throws Exception {
         ReadThroughGenerator g = new ReadThroughGenerator(new UCSCRefFlatParser());
-        System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM, null));
+        //System.out.println(g.generate(new File("../fusim-data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM, null));
+        List<TranscriptRecord> transcripts = g.parseTranscripts(new File("../fusim-data/refFlat.txt"), null);
+        Collections.sort(transcripts, new TranscriptLenCompare());
+        for(int i = 0; i < 100; i++) {
+            System.out.println(transcripts.get(i));
+        }
     }
 
 }

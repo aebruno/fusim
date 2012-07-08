@@ -26,6 +26,10 @@ public class UCSCRefFlatParser implements GeneModelParser {
         String[] fields = line.split("\t");
         TranscriptRecord record = TranscriptRecord.fromRefFlat(fields);
 
+        if(record.getExonBases() == 0) return null;
+
+        if(cdsOnly && record.getCdsExonBases() == 0) return null;
+
         if(keepExonBoundries && record.getValidExonBoundryBreaks(cdsOnly).size() == 0) {
             return null;
         }
