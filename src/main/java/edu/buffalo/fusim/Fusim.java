@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -283,23 +284,23 @@ public class Fusim {
             //out.println(f);
             
             // First half of gene 1
-            int[] break1 = f.getGene1().generateExonBreak(true, cmd.hasOption("c"));
+            int[] break1 = f.getGene(0).generateExonBreak(true, cmd.hasOption("c"));
             
             // Second half of gene2
-            int[] break2 = f.getGene2().generateExonBreak(false, cmd.hasOption("c"));
+            int[] break2 = f.getGene(1).generateExonBreak(false, cmd.hasOption("c"));
 
             // Keep ORF (don't allow out of frame) and allow splitting of exons
             if(!cmd.hasOption("d") && !cmd.hasOption("e")) {
                 // Ensure fusion gene is within ORF
                 int break1BaseCount = 0;
                 for(int i = 0; i < break1.length; i++) {
-                    int[] exon = f.getGene1().getExons(cmd.hasOption("c")).get(break1[i]);
+                    int[] exon = f.getGene(0).getExons(cmd.hasOption("c")).get(break1[i]);
                     break1BaseCount += exon[1]-exon[0];
                 }
 
                 int break2BaseCount = 0;
                 for(int i = 0; i < break2.length; i++) {
-                    int[] exon = f.getGene2().getExons(cmd.hasOption("c")).get(break2[i]);
+                    int[] exon = f.getGene(1).getExons(cmd.hasOption("c")).get(break2[i]);
                     break2BaseCount += exon[1]-exon[0];
                 }
 
@@ -316,26 +317,29 @@ public class Fusim {
                         break2BaseCount--;
                     }
 
-                    f.getGene1().getExons(cmd.hasOption("c")).get(break1[0])[1] -= break1BaseAdjust;
-                    f.getGene2().getExons(cmd.hasOption("c")).get(break2[0])[1] -= break2BaseAdjust;
+                    f.getGene(0).getExons(cmd.hasOption("c")).get(break1[0])[1] -= break1BaseAdjust;
+                    f.getGene(1).getExons(cmd.hasOption("c")).get(break2[0])[1] -= break2BaseAdjust;
 
                 }
             } else if(cmd.hasOption("e") && !cmd.hasOption("d")) {
                 // Keep ORF (don't allow out of frame) and don't allow splitting of exons (keep exon boundries)
                 // Break gene 1 on exons boundries
-                break1 = f.getGene1().generateExonBoundryBreak(cmd.hasOption("c"));
+                break1 = f.getGene(0).generateExonBoundryBreak(cmd.hasOption("c"));
                 
                 // Break gene 2 on exons boundries
-                break2 = f.getGene2().generateExonBoundryBreak(cmd.hasOption("c"));
+                break2 = f.getGene(1).generateExonBoundryBreak(cmd.hasOption("c"));
 
             }
             
+            List<int []> breaks = new ArrayList<int []>();
+            breaks.add(break1);
+            breaks.add(break2);
             if(textOutput != null) {
-                textOutput.print(f.outputText(break1, break2, cmd.hasOption("c")));
+                textOutput.print(f.outputText(breaks, cmd.hasOption("c")));
             }
             
             if(fastaOutput != null) {
-                fastaOutput.println(f.outputFasta(break1, break2, referenceFile, cmd.hasOption("c"), cmd.hasOption("a")));
+                fastaOutput.println(f.outputFasta(breaks, referenceFile, cmd.hasOption("c"), cmd.hasOption("a")));
             }
         }
         

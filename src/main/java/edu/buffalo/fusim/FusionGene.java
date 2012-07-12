@@ -20,59 +20,68 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import edu.buffalo.fusim.gtf.Strand;
+
 public class FusionGene {
-    
-    private TranscriptRecord gene1;
-    private TranscriptRecord gene2;
+
+    private List<TranscriptRecord> genes = new ArrayList<TranscriptRecord>();
+    private String geneId;
+    private String transcriptId;
     
     public FusionGene(TranscriptRecord gene1, TranscriptRecord gene2) {
-        this.gene1 = gene1;
-        this.gene2 = gene2;
+        this.genes.add(gene1);
+        this.genes.add(gene2);
+        this.setIds();
+    }
+
+    public FusionGene(TranscriptRecord gene1, TranscriptRecord gene2, TranscriptRecord gene3) {
+        this.genes.add(gene1);
+        this.genes.add(gene2);
+        this.genes.add(gene3);
+        this.setIds();
     }
     
-    public String outputFasta(int[] break1, int[] break2, File reference, boolean cdsExonsOnly, boolean fixOrientation) {
+    public String outputFasta(List<int []> breaks, File reference, boolean cdsExonsOnly, boolean fixOrientation) {
         ExtractSeq extractSeq = new ExtractSeq(reference);
 
         StringBuffer fasta = new StringBuffer();
-        fasta.append(">ref|"+gene1.getTranscriptId()+"-"+gene2.getTranscriptId()
-                     +" fusionGene="+gene1.getGeneId()+"-"+gene2.getGeneId()
-                     +" exons1="+StringUtils.join(ArrayUtils.toObject(break1), ",")
-                     +" break1="+gene1.getChrom()+":");
+        fasta.append(">ref|"+this.getTranscriptId()
+                     +" fusionGene="+this.getGeneId());
+
+        List<StringBuffer> seqs = new ArrayList<StringBuffer>();
+        for(int b = 0; b < breaks.size(); b++) {
+            int[] exons = breaks.get(b); 
+            TranscriptRecord gene = genes.get(b);
+            int breakno = b+1;
+            fasta.append(" exonIndex"+breakno+"="+StringUtils.join(ArrayUtils.toObject(exons), ",")
+                         +" chrom"+breakno+"="+gene.getChrom()
+                         +" strand"+breakno+"="+gene.getStrand()
+                         +" exons"+breakno+"=");
         
-        StringBuffer break1seq = new StringBuffer();
-        for(int i = 0; i < break1.length; i++) {
-            int[] exon = gene1.getExons(cdsExonsOnly).get(break1[i]);
-            fasta.append((exon[0]+1)+"-"+exon[1]);
-            if(i != (break1.length-1)) fasta.append(",");
-            break1seq.append(extractSeq.fetch(gene1.getChrom(), gene1.getStrand(), exon[0]+1, exon[1]));
-        }
-        
-        fasta.append(" strand1="+gene1.getStrand());
-        fasta.append(" exons2="+StringUtils.join(ArrayUtils.toObject(break2), ","));
-        fasta.append(" break2="+gene2.getChrom()+":");
-        
-        StringBuffer break2seq = new StringBuffer();
-        for(int i = 0; i < break2.length; i++) {
-            int[] exon = gene2.getExons(cdsExonsOnly).get(break2[i]);
-            fasta.append((exon[0]+1)+"-"+exon[1]);
-            if(i != (break2.length-1)) fasta.append(",");
-            break2seq.append(extractSeq.fetch(gene2.getChrom(), gene2.getStrand(), exon[0]+1, exon[1]));
-        }
-        
-        fasta.append(" strand2="+gene2.getStrand()+"\n");
-        fasta.append(break1seq.toString());
-        
-        if(!gene1.getStrand().equals(gene2.getStrand())) {
-            if(fixOrientation) {
-                fasta.append(ExtractSeq.reverseComplement(break2seq));
-            } else {
-                fasta.append(break2seq.toString());
+            StringBuffer breakSeq = new StringBuffer();
+            for(int i = 0; i < exons.length; i++) {
+                int[] exon = gene.getExons(cdsExonsOnly).get(exons[i]);
+                fasta.append((exon[0]+1)+"-"+exon[1]);
+                if(i != (exons.length-1)) fasta.append(",");
+                breakSeq.append(extractSeq.fetch(gene.getChrom(), gene.getStrand(), exon[0]+1, exon[1]));
             }
-        } else {
-            fasta.append(break2seq.toString());   
+            seqs.add(breakSeq);
+        }
+        
+        Strand normStrand = genes.get(0).getStrand();
+        
+        for(int i = 0; i < genes.size(); i++) {
+            if(fixOrientation && !normStrand.equals(genes.get(i).getStrand())) {
+                fasta.append(ExtractSeq.reverseComplement(seqs.get(i)));
+            } else {
+                fasta.append(seqs.get(i).toString());   
+            }
         }
 
         
@@ -81,7 +90,7 @@ public class FusionGene {
     
     private List<String> createTxtColumns(TranscriptRecord gene, int[] breaks, boolean cdsExonsOnly) {
         List<String> cols = new ArrayList<String>();
-        cols.add(gene1.getGeneId()+"-"+gene2.getGeneId());
+        cols.add(this.getGeneId());
         cols.add(gene.getGeneId());
         cols.add(gene.getTranscriptId());
         cols.add(gene.getChrom());
@@ -106,13 +115,46 @@ public class FusionGene {
         return cols;
     }
 
-    public String outputText(int[] break1, int[] break2, boolean cdsExonsOnly) {
+    public String outputText(List<int[]> breaks, boolean cdsExonsOnly) {
         StringBuffer txt = new StringBuffer();
 
-        txt.append(StringUtils.join(this.createTxtColumns(gene1, break1, cdsExonsOnly), "\t")+"\n");
-        txt.append(StringUtils.join(this.createTxtColumns(gene2, break2, cdsExonsOnly), "\t")+"\n");
+        for(int i = 0; i < breaks.size(); i++) {
+            int[] exons = breaks.get(i);
+            TranscriptRecord gene = genes.get(i);
+            txt.append(StringUtils.join(this.createTxtColumns(gene, exons, cdsExonsOnly), "\t")+"\n");
+        }
 
         return txt.toString();
+    }
+
+    private void setIds() {
+        this.geneId = StringUtils.join(
+                            CollectionUtils.collect(
+                                this.genes, 
+                                new Transformer() {
+                                    public Object transform(Object g) {
+                                        return ((TranscriptRecord)g).getGeneId();
+                                    }
+                                }
+                            ), "-");
+
+        this.transcriptId = StringUtils.join(
+                            CollectionUtils.collect(
+                                this.genes, 
+                                new Transformer() {
+                                    public Object transform(Object g) {
+                                        return ((TranscriptRecord)g).getTranscriptId();
+                                    }
+                                }
+                            ), "-");
+    }
+
+    public String getGeneId() {
+        return this.geneId;
+    }
+
+    public String getTranscriptId() {
+        return this.transcriptId;
     }
     
     public static String[] getHeader() {
@@ -123,19 +165,17 @@ public class FusionGene {
     }
     
     public String toString() {
-        String str = "---- FUSION 1 -------\n";
-        str += gene1.toString();
-        str += "---- FUSION 2 -------\n";
-        str += gene2.toString();
+        String str = "";
+        for(int i = 0; i < genes.size(); i++) {
+            TranscriptRecord gene = genes.get(i);
+            int geneno = i+1;
+            str += "---- FUSION "+geneno+" -------\n";
+            str += gene.toString();
+        }
         return str;
     }
 
-    public TranscriptRecord getGene1() {
-        return gene1;
+    public TranscriptRecord getGene(int index) {
+        return genes.get(index);
     }
-
-    public TranscriptRecord getGene2() {
-        return gene2;
-    }
-   
 }
