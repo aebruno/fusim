@@ -18,12 +18,14 @@ package edu.buffalo.fusim;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import net.sf.picard.sam.MergeSamFiles;
 
@@ -70,7 +72,11 @@ public class Fusim {
             printHelpAndExit(options, e.getMessage());
         }
 
-        if (cmd.hasOption("h")) {
+        if (cmd.hasOption("v")) {
+            printVersionAndExit();
+        }
+
+        if (cmd.hasOption("h") || cmd.getOptions().length == 0) {
             printHelpAndExit(options);
         }
 
@@ -453,6 +459,11 @@ public class Fusim {
                              .hasArg()
                              .create("l")
             );
+        options.addOption(
+                OptionBuilder.withLongOpt("version")
+                             .withDescription("Display version info")
+                             .create("v")
+            );
     }
 
     public void fatalError(String message) {
@@ -475,5 +486,17 @@ public class Fusim {
 
     public void printHelpAndExit(Options options) {
         printHelpAndExit(options, null);
+    }
+
+    private void printVersionAndExit() {
+        Properties properties = new Properties();
+        try {
+            InputStream inStream = this.getClass().getClassLoader().getResourceAsStream("version.properties");
+            properties.load(inStream);
+        } catch (Exception e){
+            logger.warn("Failed to load version data: "+e.getMessage());
+        }
+        System.out.println("v"+properties.getProperty("fusim.version"));
+        System.exit(0);
     }
 }
