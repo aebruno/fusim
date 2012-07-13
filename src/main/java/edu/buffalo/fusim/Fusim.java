@@ -169,6 +169,15 @@ public class Fusim {
                 printHelpAndExit(options, "Number of read through fusion genes (-x) must be a number");
             }
         }
+
+        int nTriFusion = 0;
+        if(cmd.hasOption("j")) {
+            try {
+                nTriFusion = Integer.parseInt(cmd.getOptionValue("j"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Number of tri-fusions (-j) must be a number");
+            }
+        }
         
         int nThreads = Runtime.getRuntime().availableProcessors();
         if(cmd.hasOption("p")) {
@@ -276,6 +285,12 @@ public class Fusim {
             List<FusionGene> rtFusions = rt.generate(nReadThrough, 2);
             fusions.addAll(rtFusions);
         }
+        
+        // Generate any tri-fusions
+        if(nTriFusion > 0) {
+            logger.info("Generating tri-fusion genes...");
+            fusions.addAll(fg.generate(nTriFusion, 3));
+        }
 
         if(fusions.size() == 0) {
             fatalError("No genes found to simulate fusions!");    
@@ -287,58 +302,47 @@ public class Fusim {
         
         for(FusionGene f : fusions) {
             //out.println(f);
+            List<int []> breaks = new ArrayList<int []>();
             
             // First half of gene 1
-            int[] break1 = f.getGene(0).generateExonBreak(true, cmd.hasOption("c"));
+            breaks.add(f.getGene(0).generateExonBreak(true, cmd.hasOption("c")));
             
-            // Second half of gene2
-            int[] break2 = f.getGene(1).generateExonBreak(false, cmd.hasOption("c"));
+            if(f.size() == 2) {
+                // Second half of gene2
+                breaks.add(f.getGene(1).generateExonBreak(false, cmd.hasOption("c")));
+            } else if(f.size() == 3) {
+                // Second half of gene2
+                breaks.add(f.getGene(1).generateExonBreak(false, cmd.hasOption("c")));
+                
+                // Second half of gene3
+                breaks.add(f.getGene(2).generateExonBreak(false, cmd.hasOption("c")));
+            }
 
             // Keep ORF (don't allow out of frame) and allow splitting of exons
             if(!cmd.hasOption("d") && !cmd.hasOption("e")) {
-                // Ensure fusion gene is within ORF
-                int break1BaseCount = 0;
-                for(int i = 0; i < break1.length; i++) {
-                    int[] exon = f.getGene(0).getExons(cmd.hasOption("c")).get(break1[i]);
-                    break1BaseCount += exon[1]-exon[0];
-                }
-
-                int break2BaseCount = 0;
-                for(int i = 0; i < break2.length; i++) {
-                    int[] exon = f.getGene(1).getExons(cmd.hasOption("c")).get(break2[i]);
-                    break2BaseCount += exon[1]-exon[0];
-                }
-
-                if((break1BaseCount+break2BaseCount) % 3 != 0) {
-                    // Auto adjust 
-                    int break1BaseAdjust = 0;
-                    int break2BaseAdjust = 0;
-                    while(break1BaseCount % 3 != 0) {
-                        break1BaseAdjust++;
-                        break1BaseCount--;
+                // Split last exon in half and ensure within ORF
+                for(int i = 0; i < breaks.size(); i++) {
+                    int[] exons = breaks.get(i);
+                    int[] lastExon = f.getGene(i).getExons(cmd.hasOption("c")).get(exons[exons.length-1]);
+                    int halfWayIndex = (lastExon[1]-lastExon[0])/2;
+                    while(halfWayIndex % 3 != 0) {
+                        halfWayIndex--;
                     }
-                    while(break2BaseCount % 3 != 0) {
-                        break2BaseAdjust++;
-                        break2BaseCount--;
-                    }
-
-                    f.getGene(0).getExons(cmd.hasOption("c")).get(break1[0])[1] -= break1BaseAdjust;
-                    f.getGene(1).getExons(cmd.hasOption("c")).get(break2[0])[1] -= break2BaseAdjust;
-
+                    f.getGene(i).getExons(cmd.hasOption("c")).get(exons[exons.length-1])[1] -= halfWayIndex;
                 }
             } else if(cmd.hasOption("e") && !cmd.hasOption("d")) {
                 // Keep ORF (don't allow out of frame) and don't allow splitting of exons (keep exon boundries)
-                // Break gene 1 on exons boundries
-                break1 = f.getGene(0).generateExonBoundryBreak(cmd.hasOption("c"));
+                // Break genes on exons boundries
+                breaks.add(f.getGene(0).generateExonBoundryBreak(cmd.hasOption("c")));
                 
-                // Break gene 2 on exons boundries
-                break2 = f.getGene(1).generateExonBoundryBreak(cmd.hasOption("c"));
-
+                if(f.size() == 2) {
+                    breaks.add(f.getGene(1).generateExonBoundryBreak(cmd.hasOption("c")));
+                } else if(f.size() == 3) {
+                    breaks.add(f.getGene(2).generateExonBoundryBreak(cmd.hasOption("c")));
+                    breaks.add(f.getGene(3).generateExonBoundryBreak(cmd.hasOption("c")));
+                }
             }
             
-            List<int []> breaks = new ArrayList<int []>();
-            breaks.add(break1);
-            breaks.add(break2);
             if(textOutput != null) {
                 textOutput.print(f.outputText(breaks, cmd.hasOption("c")));
             }
@@ -411,6 +415,12 @@ public class Fusim {
                              .withDescription("Number of read through fusion genes")
                              .hasArg()
                              .create("x")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("tri-fusion")
+                             .withDescription("Number of fusions with three genes")
+                             .hasArg()
+                             .create("j")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("rpkm-cutoff")

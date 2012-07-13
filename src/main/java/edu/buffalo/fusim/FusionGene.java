@@ -186,6 +186,10 @@ public class FusionGene {
         return genes.get(index);
     }
 
+    public int size() {
+        return genes.size();
+    }
+
     public void addGene(TranscriptRecord gene) {
         genes.add(gene);
     }
