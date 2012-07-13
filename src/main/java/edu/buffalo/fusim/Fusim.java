@@ -178,6 +178,15 @@ public class Fusim {
                 printHelpAndExit(options, "Number of tri-fusions (-j) must be a number");
             }
         }
+
+        int nSelfFusion = 0;
+        if(cmd.hasOption("s")) {
+            try {
+                nSelfFusion = Integer.parseInt(cmd.getOptionValue("s"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Number of self-fusions (-s) must be a number");
+            }
+        }
         
         int nThreads = Runtime.getRuntime().availableProcessors();
         if(cmd.hasOption("p")) {
@@ -290,6 +299,12 @@ public class Fusim {
         if(nTriFusion > 0) {
             logger.info("Generating tri-fusion genes...");
             fusions.addAll(fg.generate(nTriFusion, 3));
+        }
+        
+        // Generate any self-fusions
+        if(nSelfFusion > 0) {
+            logger.info("Generating self-fusion genes...");
+            fusions.addAll(fg.generate(nSelfFusion, 1));
         }
 
         if(fusions.size() == 0) {
@@ -421,6 +436,12 @@ public class Fusim {
                              .withDescription("Number of fusions with three genes")
                              .hasArg()
                              .create("j")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("self-fusion")
+                             .withDescription("Number of self-fusions (fusions with single gene)")
+                             .hasArg()
+                             .create("s")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("rpkm-cutoff")

@@ -59,6 +59,11 @@ public class BackgroundGenerator implements FusionGenerator {
                 int[] sample = RandomSamplingAssistant.sampleArray(genesPerFusion, b.elements());
                 for(int s = 0; s < sample.length; s++) {
                     genes.add(transcripts.get(sample[s]));
+
+                    // Self-fusion
+                    if(sample.length == 1) {
+                        genes.add(transcripts.get(sample[s]));
+                    }
                 }
                 fusions.add(new FusionGene(genes));
             }
@@ -82,7 +87,13 @@ public class BackgroundGenerator implements FusionGenerator {
                 for(int j = 0; j < genesPerFusion; j++) {
                     int binIndex = distribution[r.nextInt(distribution.length)];
                     IntArrayList b = geneBins.getBin(binIndex);
-                    genes.add(transcripts.get(b.get(r.nextInt(b.size()))));
+                    TranscriptRecord tr = transcripts.get(b.get(r.nextInt(b.size())));
+                    genes.add(tr);
+
+                    // Self-fusion
+                    if(genesPerFusion == 1) {
+                        genes.add(tr);
+                    }
                 }
                 fusions.add(new FusionGene(genes));
             }

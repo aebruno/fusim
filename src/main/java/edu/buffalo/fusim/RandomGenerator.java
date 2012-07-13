@@ -39,7 +39,13 @@ public class RandomGenerator implements FusionGenerator {
                 } else {
                     transcripts = selector.select();
                 }
-                genes.add(transcripts.get(r.nextInt(transcripts.size())));
+                TranscriptRecord t = transcripts.get(r.nextInt(transcripts.size()));
+                genes.add(t);
+
+                // self-fusion
+                if(genesPerFusion == 1) {
+                    genes.add(t);
+                }
             }
             list.add(new FusionGene(genes));
         }
