@@ -18,10 +18,9 @@ package edu.buffalo.fusim;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -35,6 +34,7 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -128,12 +128,7 @@ public class BackgroundSelector implements GeneSelector {
 
         public void run() {
             try {
-                Charset charset = Charset.forName("UTF-8");
-
-                // XXX Use Java NIO for reading File. Requires Java 7
-                BufferedReader reader = Files.newBufferedReader(FileSystems
-                        .getDefault().getPath(geneModelFile.getAbsolutePath()),
-                        charset);
+                BufferedReader reader = IOUtils.toBufferedReader(new InputStreamReader(new FileInputStream(geneModelFile), "UTF-8"));
 
                 String line = null;
                 while ((line = reader.readLine()) != null) {

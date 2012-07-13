@@ -2,13 +2,12 @@ package edu.buffalo.fusim;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -162,11 +162,8 @@ public class GTF2RefFlat {
     }
     
     private void buildMap(File gtfFile) throws IOException {
-        // XXX Use Java NIO for reading File. Requires Java 7
         try {
-            BufferedReader reader = Files.newBufferedReader(FileSystems
-                    .getDefault().getPath(gtfFile.getAbsolutePath()),
-                    Charset.forName("UTF-8"));
+            BufferedReader reader = IOUtils.toBufferedReader(new InputStreamReader(new FileInputStream(gtfFile), "UTF-8"));
             
             String line = null;
             while ((line = reader.readLine()) != null) {

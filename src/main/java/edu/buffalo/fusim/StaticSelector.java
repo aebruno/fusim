@@ -18,10 +18,9 @@ package edu.buffalo.fusim;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -29,6 +28,7 @@ import java.util.Map;
 
 import edu.buffalo.fusim.gtf.GTFParseException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -67,11 +67,8 @@ public class StaticSelector implements GeneSelector {
         long tstart = System.currentTimeMillis();
         this.transcripts = new ArrayList<TranscriptRecord>();
         
-        // XXX Use Java NIO for reading File. Requires Java 7?
         try {
-            BufferedReader reader = Files.newBufferedReader(FileSystems
-                    .getDefault().getPath(geneModelFile.getAbsolutePath()),
-                    Charset.forName("UTF-8"));
+            BufferedReader reader = IOUtils.toBufferedReader(new InputStreamReader(new FileInputStream(geneModelFile), "UTF-8"));
             
             String line = null;
             while ((line = reader.readLine()) != null) {
