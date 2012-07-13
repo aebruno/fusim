@@ -54,7 +54,7 @@ public class BackgroundSelector implements GeneSelector {
     private int threads;
 
     public BackgroundSelector(File backgroundFile, double rpkmCutoff, int threads) {
-        this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
+        this.queue = new ArrayBlockingQueue<TranscriptRecord>(1000);
         this.backgroundFile = backgroundFile;
         this.rpkmCutoff = rpkmCutoff;
         this.threads = threads;
@@ -115,6 +115,7 @@ public class BackgroundSelector implements GeneSelector {
             for(TranscriptRecord t : c.getTranscripts()) {
                 transcripts.add(t);
             }
+            c.clearTranscripts();
         }
 
         long tend = System.currentTimeMillis();
@@ -185,6 +186,10 @@ public class BackgroundSelector implements GeneSelector {
         
         public List<TranscriptRecord> getTranscripts() {
             return this.list;
+        }
+
+        public void clearTranscripts() {
+            this.list = new ArrayList<TranscriptRecord>();
         }
 
         public void run() {
