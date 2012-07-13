@@ -16,17 +16,19 @@
 
 package edu.buffalo.fusim;
 
+import java.io.File;
 import java.util.List;
 
-public interface FusionGenerator {
-    public List<FusionGene> generate(int nFusions, int genesPerFusion);
+public interface GeneSelector {
+    public List<TranscriptRecord> select();
 
-    public void setGeneSelector(GeneSelector selector);
-    public GeneSelector getGeneSelector();
+    public List<TranscriptRecord> select(String[] filter);
 
-    public void setGeneSelectionMethod(GeneSelectionMethod method);
-    public GeneSelectionMethod getGeneSelectionMethod();
+    public File getGeneModelFile();
 
-    public void setFilters(List<String[]> filters);
-    public List<String[]> getFilters();
+    public void setGeneModelFile(File geneModelFile);
+
+    public GeneModelParser getGeneModelParser();
+
+    public void setGeneModelParser(GeneModelParser parser);
 }

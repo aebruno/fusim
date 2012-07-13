@@ -247,28 +247,33 @@ public class Fusim {
         logger.info("------------------------------------------------------------------------");
         
         GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("e"), cmd.hasOption("c"), limit);
+        GeneSelector selector = null;
         FusionGenerator fg = null;
         
         if(cmd.hasOption("b")) {
-            fg = new BackgroundGenerator(bamFile, parser, rpkmCutoff, nThreads, limit);
+            selector = new BackgroundSelector(bamFile, rpkmCutoff, nThreads);
+            fg = new BackgroundGenerator();
         } else {
-            fg = new RandomGenerator(parser, limit);
+            selector = new StaticSelector();
+            fg = new RandomGenerator();
         }
+
+        selector.setGeneModelFile(geneModelFile);
+        selector.setGeneModelParser(parser);
+
+        fg.setGeneSelector(selector);
+        fg.setGeneSelectionMethod(geneSelectioMethod);
         
-        logger.info("Starting fusion gene simulation...");
-        long tstart = System.currentTimeMillis();
-        List<FusionGene> fusions = fg.generate(geneModelFile, nFusions, geneSelectioMethod);
-        long tend = System.currentTimeMillis();
-        
-        logger.info("Simulation complete.");
-        double totalTime = ((tend - tstart)/1000);
-        logger.info("Total processing time: " + totalTime + "s");
+        List<FusionGene> fusions = fg.generate(nFusions, 2);
         
         // Generate any read through fusion genes
         if(nReadThrough > 0) {
             logger.info("Generating read through genes...");
-            ReadThroughGenerator rt = new ReadThroughGenerator(parser);
-            List<FusionGene> rtFusions = rt.generate(geneModelFile, nReadThrough, geneSelectioMethod);
+            ReadThroughGenerator rt = new ReadThroughGenerator();
+            rt.setGeneSelector(selector);
+            rt.setGeneSelectionMethod(geneSelectioMethod);
+
+            List<FusionGene> rtFusions = rt.generate(nReadThrough, 2);
             fusions.addAll(rtFusions);
         }
 

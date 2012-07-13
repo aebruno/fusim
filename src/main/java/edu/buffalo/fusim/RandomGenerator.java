@@ -16,86 +16,58 @@
 
 package edu.buffalo.fusim;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
-import edu.buffalo.fusim.gtf.GTFParseException;
-
 public class RandomGenerator implements FusionGenerator {
-    private GeneModelParser parser;
-    private Map<String,Boolean> limit;
+    
+    private GeneSelector selector;
+    private GeneSelectionMethod method;
+    private List<String[]> filters;
 
-    public RandomGenerator(GeneModelParser parser, Map<String,Boolean> limit) {
-        this.parser = parser;
-        this.limit = limit;
-    }
-
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
+    public List<FusionGene> generate(int nFusions, int genesPerFusion) {
         List<FusionGene> list = new ArrayList<FusionGene>();
         Random r = new Random();
 
-        //XXX only read entire gene model file into memory if we have to (ex. for limits)
-        if(limit != null) {
-            ReadThroughGenerator rt = new ReadThroughGenerator(parser);
-            List<TranscriptRecord> transcripts = rt.parseTranscripts(gtfFile);
-            if(transcripts.size() < 2) {
-                return list;
+        for(int n = 0; n < nFusions; n++) {
+            List<TranscriptRecord> genes = new ArrayList<TranscriptRecord>();
+            for(int i = 0; i < genesPerFusion; i++) {
+                List<TranscriptRecord> transcripts = null;
+                if(filters != null && i <= filters.size()-1) {
+                    transcripts = selector.select(filters.get(i));
+                } else {
+                    transcripts = selector.select();
+                }
+                genes.add(transcripts.get(r.nextInt(transcripts.size())));
             }
-            for (int i = 0; i < nFusions; i++) {
-                list.add(new FusionGene(transcripts.get(r.nextInt(transcripts.size())),
-                                        transcripts.get(r.nextInt(transcripts.size()))));
-            }
-            return list;
-        }
-
-        // Otherwise we randomly seek the file
-        try {
-            RandomAccessFile raf = new RandomAccessFile(gtfFile, "r");
-            for (int i = 0; i < nFusions; i++) {
-                list.add(new FusionGene(this.getRandomTranscript(r, raf, (int)gtfFile.length()),
-                                        this.getRandomTranscript(r, raf, (int)gtfFile.length())));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate fusion genes: "+e.getMessage());
+            list.add(new FusionGene(genes));
         }
 
         return list;
     }
 
-    private TranscriptRecord getRandomTranscript(Random r,
-            RandomAccessFile raf, int length) throws IOException {
-        int randomByte = r.nextInt(length);
-        raf.seek((long) randomByte);
-        raf.readLine();
-
-        TranscriptRecord record = null;
-        for (int tries = 0; tries < 100; tries++) {
-            String line = raf.readLine();
-            try {
-                record = parser.parseLine(line);
-                if(record == null) continue;
-            } catch (GTFParseException e) {
-                // XXX ignored for now;
-            }
-            if (record != null)
-                break;
-        }
-
-        if (record == null) {
-            throw new IOException(
-                    "Failed to find random transcript after 100 attempts");
-        }
-
-        return record;
+    public void setGeneSelector(GeneSelector selector) {
+        this.selector = selector;
     }
 
-    public static void main(String[] args) throws Exception {
-        RandomGenerator g = new RandomGenerator(new UCSCRefFlatParser(), null);
-        System.out.println(g.generate(new File("data/refGene.txt"), 1, GeneSelectionMethod.UNIFORM));
+    public GeneSelector getGeneSelector() {
+        return this.selector;
+    }
+
+    public void setGeneSelectionMethod(GeneSelectionMethod method) {
+        this.method = method;
+    }
+
+    public GeneSelectionMethod getGeneSelectionMethod() {
+        return this.method;
+    }
+
+    public void setFilters(List<String[]> filters) {
+        this.filters = filters;
+    }
+
+    public List<String[]> getFilters() {
+        return this.filters;
     }
 }

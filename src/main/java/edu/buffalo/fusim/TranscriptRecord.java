@@ -51,6 +51,7 @@ public class TranscriptRecord {
     private String geneId;
     private List<int []> codingExons;
     private List<int []> exons;
+    private double rpkm;
 
     private TranscriptRecord() {
 
@@ -112,7 +113,17 @@ public class TranscriptRecord {
                     "Invalid RefGene file. Can't parse integer value: ", e);
         }
         
+        record.rpkm = 0.0;
+
         return record;
+    }
+
+    public void setRPKM(double rpkm) {
+        this.rpkm = rpkm;
+    }
+
+    public double getRPKM() {
+        return this.rpkm;
     }
 
     public List<int []> getCodingExons() {

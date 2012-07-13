@@ -16,118 +16,59 @@
 
 package edu.buffalo.fusim;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import net.sf.samtools.AbstractBAMFileIndex;
-import net.sf.samtools.BAMIndexMetaData;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import cern.colt.list.IntArrayList;
 import cern.jet.random.sampling.RandomSamplingAssistant;
-import edu.buffalo.fusim.gtf.GTFParseException;
 
 public class BackgroundGenerator implements FusionGenerator {
     private Log logger = LogFactory.getLog(BackgroundGenerator.class);
+    private GeneSelector selector;
+    private GeneSelectionMethod method;
+    private List<String[]> filters;
 
-    private GeneModelParser parser;
-    private ArrayBlockingQueue<TranscriptRecord> queue;
-    private File backgroundFile;
-    private double rpkmCutoff;
-    private int threads;
-    private Map<String, Boolean> limit;
-
-    public BackgroundGenerator(File backgroundFile, GeneModelParser parser, double rpkmCutoff, int threads, Map<String,Boolean> limit) {
-        this.parser = parser;
-        this.queue = new ArrayBlockingQueue<TranscriptRecord>(100000);
-        this.backgroundFile = backgroundFile;
-        this.rpkmCutoff = rpkmCutoff;
-        this.threads = threads;
-        this.limit = limit;
-    }
-
-    public List<FusionGene> generate(File gtfFile, int nFusions, GeneSelectionMethod method) {
-        logger.info("Processing background reads...");
-        logger.info("Computing RPKM values using " + threads + " threads...");
-
-        GeneModelProducer producer = new GeneModelProducer(gtfFile);
-        producer.start();
-
-        // Leave one thread for the GTF producer
-        if (threads > 1)
-            threads--;
-        ArrayList<GeneModelConsumer> consumers = new ArrayList<GeneModelConsumer>();
-
-        for (int i = 0; i < threads; i++) {
-            GeneModelConsumer consumer = new GeneModelConsumer(backgroundFile, this.rpkmCutoff);
-            consumer.start();
-            consumers.add(consumer);
-        }
-
-        try {
-            producer.join();
-            for (GeneModelConsumer c : consumers) {
-                c.join();
-            }
-        } catch (InterruptedException e) {}
-        
-        List<RPKM> rpkm = new ArrayList<RPKM>();
-        
-        // Reduce
-        for(GeneModelConsumer c : consumers) {
-            for(RPKM r : c.getRPKMList()) {
-                rpkm.add(r);
-            }
-        }
-
+    public List<FusionGene> generate(int nFusions, int genesPerFusion) {
         List<FusionGene> fusions = new ArrayList<FusionGene>();
-        if(rpkm.size() == 0) return fusions;
+
+        List<TranscriptRecord> transcripts = selector.select();
+        if(transcripts.size() == 0) return fusions;
         
-        Collections.sort(rpkm, new RPKMCompare());
+        Collections.sort(transcripts, new TranscriptCompare());
         
         // First bin genes into RPKM buckets
-        BinGenes bin = new BinGenes(nFusions);
-        bin.fill(rpkm);
-
-        //XXX currently only allow uniform selection method when limits are in place
-        if(limit != null) {
-            method = GeneSelectionMethod.UNIFORM;
-            logger.warn("Forcing uniform gene selection method when using limit option...");
-        }
+        GeneBins geneBins = new GeneBins(nFusions);
+        geneBins.fill(transcripts);
 
         if(GeneSelectionMethod.BINNED.equals(method)) {
             logger.info("Generating fusions using RPKM bins...");
-            for(int i = 0; i < bin.size(); i++) {
-                IntArrayList b = bin.getBin(i);
+            for(int i = 0; i < geneBins.size(); i++) {
+                IntArrayList b = geneBins.getBin(i);
                 b.trimToSize();
-                int[] sample = RandomSamplingAssistant.sampleArray(2, b.elements());
-                fusions.add(new FusionGene(rpkm.get(sample[0]).getTranscript(),
-                                           rpkm.get(sample[1]).getTranscript()));
+                if(b.elements().length < genesPerFusion) {
+                    logger.fatal("Not enough genes in this bin to generate fusion!");
+                    continue;
+                }
+                List<TranscriptRecord>  genes = new ArrayList<TranscriptRecord>();
+                int[] sample = RandomSamplingAssistant.sampleArray(genesPerFusion, b.elements());
+                for(int s = 0; s < sample.length; s++) {
+                    genes.add(transcripts.get(sample[s]));
+                }
+                fusions.add(new FusionGene(genes));
             }
         } else if(GeneSelectionMethod.EMPIRICAL.equals(method)) {
             logger.info("Generating fusions based on empirical background distribution...");
             Random r = new Random();
-            int[] distribution = new int[rpkm.size()];
+            int[] distribution = new int[transcripts.size()];
             int index = 0;
-            for(int i = 0; i < bin.size(); i++) {
-                IntArrayList b = bin.getBin(i);
+            for(int i = 0; i < geneBins.size(); i++) {
+                IntArrayList b = geneBins.getBin(i);
                 b.trimToSize();
                 for(int j = 0; j < b.size(); j++) {
                     distribution[index] = i;    
@@ -136,61 +77,42 @@ public class BackgroundGenerator implements FusionGenerator {
             }
 
             for(int x = 0; x < nFusions; x++) {
-                int binIndex1 = distribution[r.nextInt(distribution.length)];
-                int binIndex2 = distribution[r.nextInt(distribution.length)];
-                IntArrayList b1 = bin.getBin(binIndex1);
-                IntArrayList b2 = bin.getBin(binIndex2);
+                List<TranscriptRecord> genes = new ArrayList<TranscriptRecord>();
 
-                fusions.add(new FusionGene(rpkm.get(b1.get(r.nextInt(b1.size()))).getTranscript(),
-                                           rpkm.get(b2.get(r.nextInt(b2.size()))).getTranscript()));
+                for(int j = 0; j < genesPerFusion; j++) {
+                    int binIndex = distribution[r.nextInt(distribution.length)];
+                    IntArrayList b = geneBins.getBin(binIndex);
+                    genes.add(transcripts.get(b.get(r.nextInt(b.size()))));
+                }
+                fusions.add(new FusionGene(genes));
             }
         } else  {
             logger.info("Generating fusions based on uniform distribution...");
-            Random r = new Random();
-            for(int i = 0; i < nFusions; i++) {
-                int index1 = r.nextInt(rpkm.size());
-                int index2 = r.nextInt(rpkm.size());
-                fusions.add(new FusionGene(rpkm.get(index1).getTranscript(),
-                                           rpkm.get(index2).getTranscript()));
-            }
+            RandomGenerator rg = new RandomGenerator();
+            rg.setGeneSelector(selector);
+            rg.setFilters(filters);
+            rg.setGeneSelectionMethod(method);
+            fusions = rg.generate(nFusions, genesPerFusion);
         }
         
         return fusions;
     }
   
-    protected class RPKM {
-        private TranscriptRecord transcript;
-        private double value;
-        
-        public RPKM(TranscriptRecord transcript, double value) {
-            this.transcript = transcript;
-            this.value = value;
-        }
-
-        public TranscriptRecord getTranscript() {
-            return transcript;
-        }
-
-        public double getValue() {
-            return value;
+    protected class TranscriptCompare implements Comparator<TranscriptRecord> {
+        public int compare(TranscriptRecord o1, TranscriptRecord o2) {
+            return Double.compare(o1.getRPKM(), o2.getRPKM());
         }
     }
     
-    protected class RPKMCompare implements Comparator<RPKM> {
-        public int compare(RPKM o1, RPKM o2) {
-            return Double.compare(o1.getValue(), o2.getValue());
-        }
-    }
-    
-    protected class BinGenes {
+    protected class GeneBins {
         private IntArrayList[] bins;
         private int binsize;
         
-        public BinGenes(int binsize) {
+        public GeneBins(int binsize) {
             this.binsize = binsize;
         }
         
-        public void fill(List<RPKM> values) {
+        public void fill(List<TranscriptRecord> values) {
             if(values.size() < binsize) {
                 this.binsize = 1;
             }
@@ -218,123 +140,29 @@ public class BackgroundGenerator implements FusionGenerator {
         public IntArrayList getBin(int index) {
             return this.bins[index];
         }
-        
     }
 
-    protected class GeneModelProducer extends Thread {
-        private Log log = LogFactory.getLog(GeneModelProducer.class);
-
-        private File gtfFile;
-
-        public GeneModelProducer(File gtfFile) {
-            this.gtfFile = gtfFile;
-        }
-
-        public void run() {
-            try {
-                Charset charset = Charset.forName("UTF-8");
-
-                // XXX Use Java NIO for reading File. Requires Java 7
-                BufferedReader reader = Files.newBufferedReader(FileSystems
-                        .getDefault().getPath(gtfFile.getAbsolutePath()),
-                        charset);
-
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("#")) continue;
-                    TranscriptRecord feature;
-                    try {
-                        feature = parser.parseLine(line);
-                        if(feature == null) continue;
-
-                        queue.put(feature);
-                    } catch (InterruptedException e) {
-                        log.fatal("InterruptedException while adding to queue: "
-                                + e.getMessage());
-                    } catch(GTFParseException e) {
-                        log.fatal("Failed to parse gene model line: "
-                                + e.getMessage());
-                    }
-                }
-            } catch (IOException e) {
-                log.fatal("I/O error while reading GTF file: "
-                        + e.getMessage());
-            }
-        }
+    public void setGeneSelector(GeneSelector selector) {
+        this.selector = selector;
     }
 
-    protected class GeneModelConsumer extends Thread {
-        private Log log = LogFactory.getLog(GeneModelProducer.class);
-        private SAMFileReader sam;
-        private int totalMappedReads;
-        private double rpkmCutoff;
-        private List<RPKM> rpkmList = new ArrayList<RPKM>();
+    public GeneSelector getGeneSelector() {
+        return this.selector;
+    }
 
-        public GeneModelConsumer(File bamFile, double rpkmCutoff) {
-            this.rpkmCutoff = rpkmCutoff;
-            File bamIndexFile = new File(bamFile.getAbsolutePath() + ".bai");
-            if (bamIndexFile.canRead()) {
-                sam = new SAMFileReader(bamFile, bamIndexFile);
-            } else {
-                //XXX this needs to throw an error!!! we need a BAM index
-                sam = new SAMFileReader(bamFile);
-            }
+    public void setGeneSelectionMethod(GeneSelectionMethod method) {
+        this.method = method;
+    }
 
-            AbstractBAMFileIndex index = (AbstractBAMFileIndex) sam.getIndex();
+    public GeneSelectionMethod getGeneSelectionMethod() {
+        return this.method;
+    }
 
-            totalMappedReads = 0;
-            for (int i = 0; i < index.getNumberOfReferences(); i++) {
-                BAMIndexMetaData meta = index.getMetaData(i);
-                totalMappedReads += meta.getAlignedRecordCount();
-            }
+    public void setFilters(List<String[]> filters) {
+        this.filters = filters;
+    }
 
-            //logger.warn("Total Mapped Reads found: "+totalMappedReads);
-        }
-        
-        public List<RPKM> getRPKMList() {
-            return this.rpkmList;
-        }
-
-        public void run() {
-            TranscriptRecord transcript;
-
-            while (true) {
-                try {
-                    transcript = queue.poll(100, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    log.fatal("Interrupted exception while consuming: "
-                            + e.getMessage());
-                    return;
-                }
-                if (transcript == null)
-                    break;
-
-                int count = 0;
-                // XXX do we want only coding exons here???
-                //for(int[] exon : feature.getCodingExons()) 
-                for(int i = 0; i < transcript.getExonStarts().length; i++) {
-                    // XXX end-1 here???
-                    int start = transcript.getExonStarts()[i];
-                    int end = transcript.getExonEnds()[i];
-                    SAMRecordIterator it = sam.queryOverlapping(transcript.getChrom(), start, end);
-
-                    while (it.hasNext()) {
-                        SAMRecord samRecord = it.next();
-                        // XXX do we require the mate to be mapped??
-                        //if(samRecord.getReadUnmappedFlag() || samRecord.getMateUnmappedFlag()) continue;
-                        //if(samRecord.getReadUnmappedFlag()) continue;
-                        if(!samRecord.getReadUnmappedFlag() || !samRecord.getMateUnmappedFlag()) {
-                            count++;
-                        }
-                    }
-
-                    it.close();
-                }
-                Double rpkm = (Math.pow(10,9)*(double)count)/((double)totalMappedReads*transcript.getExonBases());
-                if(rpkm > this.rpkmCutoff) {
-                    rpkmList.add(new RPKM(transcript, rpkm));
-                }
-            }
-        }
+    public List<String[]> getFilters() {
+        return this.filters;
     }
 }

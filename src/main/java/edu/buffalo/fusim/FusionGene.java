@@ -33,6 +33,13 @@ public class FusionGene {
     private List<TranscriptRecord> genes = new ArrayList<TranscriptRecord>();
     private String geneId;
     private String transcriptId;
+
+    public FusionGene(List<TranscriptRecord> transcripts) { 
+        for(TranscriptRecord tr : transcripts) {
+            genes.add(tr);
+        }
+        this.setIds();
+    }
     
     public FusionGene(TranscriptRecord gene1, TranscriptRecord gene2) {
         this.genes.add(gene1);
@@ -177,5 +184,9 @@ public class FusionGene {
 
     public TranscriptRecord getGene(int index) {
         return genes.get(index);
+    }
+
+    public void addGene(TranscriptRecord gene) {
+        genes.add(gene);
     }
 }
