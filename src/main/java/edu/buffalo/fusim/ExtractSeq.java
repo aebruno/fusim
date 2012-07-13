@@ -19,6 +19,7 @@ package edu.buffalo.fusim;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
@@ -32,6 +33,8 @@ import edu.buffalo.fusim.gtf.Strand;
 
 public class ExtractSeq {
     private static Log logger = LogFactory.getLog(ExtractSeq.class);
+
+    private static String[] bases = new String[]{"A", "C", "T", "G"};
     
     private static Map<Character,Character> symbolMap = new HashMap<Character,Character>();
     static {
@@ -76,13 +79,29 @@ public class ExtractSeq {
         
         return revc;
     }
+
+    public static StringBuffer randomSequence(int maxLen) {
+        Random r = new Random();
+
+        // Chose a random length
+        int length = r.nextInt(maxLen)+1;
+
+        StringBuffer seq = new StringBuffer();
+        for(int i = 0; i < length; i++) {
+            seq.append(bases[r.nextInt(bases.length)]);
+        }
+
+        return seq;
+    }
     
     public static void main(String[] args) {
-        ExtractSeq s = new ExtractSeq(new File("data/hg19.fa"));
-        System.out.println(s.fetch("chr17", Strand.FORWARD, 76210398, 76210508));
+        //ExtractSeq s = new ExtractSeq(new File("data/hg19.fa"));
+        //System.out.println(s.fetch("chr17", Strand.FORWARD, 76210398, 76210508));
         
-        StringBuffer buf = new StringBuffer("ACTG");
-        System.out.println(ExtractSeq.reverseComplement(buf).toString());
+        //StringBuffer buf = new StringBuffer("ACTG");
+        //System.out.println(ExtractSeq.reverseComplement(buf).toString());
+        
+        System.out.println(ExtractSeq.randomSequence(10));
     }
 
 }

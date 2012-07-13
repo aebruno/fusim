@@ -55,6 +55,10 @@ public class FusionGene {
     }
     
     public String outputFasta(List<int []> breaks, File reference, boolean cdsExonsOnly, boolean fixOrientation) {
+        return this.outputFasta(breaks, reference, cdsExonsOnly, fixOrientation, 0);
+    }
+
+    public String outputFasta(List<int []> breaks, File reference, boolean cdsExonsOnly, boolean fixOrientation, int foreignInsertionLen) {
         ExtractSeq extractSeq = new ExtractSeq(reference);
 
         StringBuffer fasta = new StringBuffer();
@@ -80,6 +84,8 @@ public class FusionGene {
             }
             seqs.add(breakSeq);
         }
+
+        fasta.append("\n");
         
         Strand normStrand = genes.get(0).getStrand();
         
@@ -88,6 +94,12 @@ public class FusionGene {
                 fasta.append(ExtractSeq.reverseComplement(seqs.get(i)));
             } else {
                 fasta.append(seqs.get(i).toString());   
+            }
+
+            if(foreignInsertionLen > 0) {
+                if(i == 0 || (i == 1 && genes.size() == 3)) {
+                    fasta.append(ExtractSeq.randomSequence(foreignInsertionLen));
+                }
             }
         }
 

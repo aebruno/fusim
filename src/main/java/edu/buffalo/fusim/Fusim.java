@@ -187,6 +187,15 @@ public class Fusim {
                 printHelpAndExit(options, "Number of self-fusions (-s) must be a number");
             }
         }
+
+        int foreignInsertionLen = 0;
+        if(cmd.hasOption("u")) {
+            try {
+                foreignInsertionLen = Integer.parseInt(cmd.getOptionValue("u"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Foreign insertion length (-u) must be a number");
+            }
+        }
         
         int nThreads = Runtime.getRuntime().availableProcessors();
         if(cmd.hasOption("p")) {
@@ -204,6 +213,16 @@ public class Fusim {
                 if(rpkmCutoff < 0 || rpkmCutoff > 1) throw new NumberFormatException();
             } catch(NumberFormatException e) {
                 printHelpAndExit(options, "RPKM cutoff (-k) must be 0 < cutoff < 1");
+            }
+        }
+
+        double foreignInsertionPct = 0.0;
+        if(cmd.hasOption("w")) {
+            try {
+                foreignInsertionPct = Double.parseDouble(cmd.getOptionValue("w"));
+                if(foreignInsertionPct < 0 || foreignInsertionPct > 1) throw new NumberFormatException();
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Foreign insertion percent (-w) must be 0 < x < 1");
             }
         }
         
@@ -314,8 +333,12 @@ public class Fusim {
         if(textOutput != null) {
             textOutput.println(StringUtils.join(FusionGene.getHeader(), "\t"));
         }
+
+        int foreignInsertionCutoff = (int)(foreignInsertionPct*fusions.size());
         
-        for(FusionGene f : fusions) {
+        for(int g = 0; g < fusions.size(); g++) {
+            FusionGene f = fusions.get(g);
+
             //out.println(f);
             List<int []> breaks = new ArrayList<int []>();
             
@@ -363,7 +386,11 @@ public class Fusim {
             }
             
             if(fastaOutput != null) {
-                fastaOutput.println(f.outputFasta(breaks, referenceFile, cmd.hasOption("c"), cmd.hasOption("a")));
+                if(foreignInsertionLen > 0 && foreignInsertionCutoff > 0 && g <= foreignInsertionCutoff) {
+                    fastaOutput.println(f.outputFasta(breaks, referenceFile, cmd.hasOption("c"), cmd.hasOption("a"), foreignInsertionLen));
+                } else {
+                    fastaOutput.println(f.outputFasta(breaks, referenceFile, cmd.hasOption("c"), cmd.hasOption("a")));
+                }
             }
         }
         
@@ -498,6 +525,18 @@ public class Fusim {
                              .withDescription("Limit fusions to specific genes/transcripts")
                              .hasArg()
                              .create("l")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("foreign-insertion-length")
+                             .withDescription("Length of homologue mediated infusion")
+                             .hasArg()
+                             .create("u")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("foreign-insertion-perecent")
+                             .withDescription("Percent of fusion genes to add homologue mediated infusions")
+                             .hasArg()
+                             .create("w")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("version")
