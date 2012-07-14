@@ -66,6 +66,8 @@ public class BackgroundSelector implements GeneSelector {
     }
 
     public List<TranscriptRecord> select(String[] filter) {
+        if(filter == null || filter.length == 0) return this.select();
+
         if(transcripts == null) this.processBackgroundReads();
 
         Map<String,Boolean> filterMap = new HashMap<String,Boolean>();

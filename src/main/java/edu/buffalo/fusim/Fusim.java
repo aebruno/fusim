@@ -239,11 +239,20 @@ public class Fusim {
         if(cmd.hasOption("l")) {
             limit = new HashMap<String,Boolean>();
             String[] limits = cmd.getOptionValue("l").split(",");
-            if(limits.length < 2) {
-                printHelpAndExit(options, "Must provide a limit of at least two genes (ex. gene1,gene2,..): "+cmd.getOptionValue("l"));
+            if(limits.length < 1) {
+                printHelpAndExit(options, "Must provide a limit of at least one genes (ex. gene1,gene2,..): "+cmd.getOptionValue("l"));
             }
             for(int i = 0; i < limits.length; i++) {
                 limit.put(limits[i], true);
+            }
+        }
+
+        List<String[]> filters = new ArrayList<String[]>();
+        for(String filterOption : new String[]{"1","2","3"}) {
+            if(cmd.hasOption(filterOption)) {
+                filters.add(cmd.getOptionValue(filterOption).split(","));
+            } else {
+                filters.add(null);
             }
         }
         
@@ -300,6 +309,7 @@ public class Fusim {
 
         fg.setGeneSelector(selector);
         fg.setGeneSelectionMethod(geneSelectioMethod);
+        fg.setFilters(filters);
         
         List<FusionGene> fusions = fg.generate(nFusions, 2);
         
@@ -525,6 +535,24 @@ public class Fusim {
                              .withDescription("Limit fusions to specific genes/transcripts")
                              .hasArg()
                              .create("l")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("gene1")
+                             .withDescription("Limit gene1 to specific genes/transcripts")
+                             .hasArg()
+                             .create("1")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("gene2")
+                             .withDescription("Limit gene2 to specific genes/transcripts")
+                             .hasArg()
+                             .create("2")
+            );
+        options.addOption(
+                OptionBuilder.withLongOpt("gene3")
+                             .withDescription("Limit gene3 to specific genes/transcripts")
+                             .hasArg()
+                             .create("3")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("foreign-insertion-length")

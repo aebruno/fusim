@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -45,6 +46,8 @@ public class StaticSelector implements GeneSelector {
     }
 
     public List<TranscriptRecord> select(String[] filter) {
+        if(filter == null || filter.length == 0) return this.select();
+
         if(transcripts == null) this.parseTranscripts();
 
         Map<String,Boolean> filterMap = new HashMap<String,Boolean>();
@@ -58,6 +61,10 @@ public class StaticSelector implements GeneSelector {
                filterMap.containsKey(r.getTranscriptId())) {
                 filteredList.add(r);
             }
+        }
+
+        if(filteredList.size() == 0) {
+            throw new RuntimeException("No transcripts found using filter: "+Arrays.toString(filter));
         }
         return filteredList;
     }
@@ -88,6 +95,9 @@ public class StaticSelector implements GeneSelector {
         long tend = System.currentTimeMillis();
         double totalTime = ((tend - tstart)/1000);
         logger.info("Finished parsing gene model file in: "+totalTime + "s");
+        if(transcripts.size() == 0) {
+            throw new RuntimeException("No transcripts found! Can't generate fusions without transcripts!");
+        }
     }
 
     public File getGeneModelFile() {
