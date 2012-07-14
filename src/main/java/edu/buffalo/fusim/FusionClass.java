@@ -38,6 +38,11 @@ public enum FusionClass {
             return "hybrid";
         }
     },
+    INTER_CHROMOSOME {
+        public String toString() {
+            return "inter_chromosome";
+        }
+    },
     READ_THROUGH {
         public String toString() {
             return "read_through";

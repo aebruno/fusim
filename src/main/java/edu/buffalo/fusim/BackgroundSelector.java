@@ -77,8 +77,9 @@ public class BackgroundSelector implements GeneSelector {
 
         List<TranscriptRecord> filteredList = new ArrayList<TranscriptRecord>();
         for(TranscriptRecord r : transcripts) {
-            if(filterMap.containsKey(r.getGeneId()) ||
-               filterMap.containsKey(r.getTranscriptId())) {
+            if(filterMap.containsKey(r.getGeneId()) 
+               || filterMap.containsKey(r.getChrom())
+               || filterMap.containsKey(r.getTranscriptId())) {
                 filteredList.add(r);
             }
         }

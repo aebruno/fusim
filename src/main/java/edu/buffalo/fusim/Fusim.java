@@ -152,7 +152,7 @@ public class Fusim {
         }
 
         
-        int nFusions = 10;
+        int nFusions = 0;
         if(cmd.hasOption("n")) {
             try {
                 nFusions = Integer.parseInt(cmd.getOptionValue("n"));
@@ -176,6 +176,15 @@ public class Fusim {
                 nTriFusion = Integer.parseInt(cmd.getOptionValue("j"));
             } catch(NumberFormatException e) {
                 printHelpAndExit(options, "Number of tri-fusions (-j) must be a number");
+            }
+        }
+
+        int nInterChromFusion = 0;
+        if(cmd.hasOption("y")) {
+            try {
+                nInterChromFusion = Integer.parseInt(cmd.getOptionValue("y"));
+            } catch(NumberFormatException e) {
+                printHelpAndExit(options, "Number of inter-chromosome fusions (-y) must be a number");
             }
         }
 
@@ -311,7 +320,11 @@ public class Fusim {
         fg.setGeneSelectionMethod(geneSelectioMethod);
         fg.setFilters(filters);
         
-        List<FusionGene> fusions = fg.generate(nFusions, 2);
+        List<FusionGene> fusions = new ArrayList<FusionGene>();
+        
+        if(nFusions > 0) {
+            fusions.addAll(fg.generate(nFusions, 2));
+        }
         
         // Generate any read through fusion genes
         if(nReadThrough > 0) {
@@ -335,6 +348,20 @@ public class Fusim {
                 g.setFusionClass(FusionClass.TRI_FUSION);
             }
             fusions.addAll(tfusions);
+        }
+        
+        // Generate any inter chromosome fusions
+        if(nInterChromFusion > 0) {
+            logger.info("Generating inter-chromosome fusions...");
+            InterChromGenerator ig = new InterChromGenerator();
+            ig.setGeneSelector(selector);
+            ig.setGeneSelectionMethod(geneSelectioMethod);
+
+            List<FusionGene> ifusions = ig.generate(nInterChromFusion, 2);
+            for(FusionGene g : ifusions) {
+                g.setFusionClass(FusionClass.INTER_CHROMOSOME);
+            }
+            fusions.addAll(ifusions);
         }
         
         // Generate any self-fusions
@@ -511,6 +538,12 @@ public class Fusim {
                              .create("s")
             );
         options.addOption(
+                OptionBuilder.withLongOpt("inter-chrom")
+                             .withDescription("Number of inter-chromosome fusions (fusions within single chrom)")
+                             .hasArg()
+                             .create("y")
+            );
+        options.addOption(
                 OptionBuilder.withLongOpt("rpkm-cutoff")
                              .withDescription("RPKM cutoff when using background BAM file. Genes below the cutoff will be ignored")
                              .hasArg()
@@ -562,25 +595,25 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("limit")
-                             .withDescription("Limit fusions to specific genes/transcripts")
+                             .withDescription("Limit all fusions to specific geneId, transcriptId, or chrom")
                              .hasArg()
                              .create("l")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene1")
-                             .withDescription("Limit gene1 to specific genes/transcripts")
+                             .withDescription("Filter gene1 by geneId, transcriptId, or chrom")
                              .hasArg()
                              .create("1")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene2")
-                             .withDescription("Limit gene2 to specific genes/transcripts")
+                             .withDescription("Filter gene2 by geneId, transcriptId, or chrom")
                              .hasArg()
                              .create("2")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene3")
-                             .withDescription("Limit gene3 to specific genes/transcripts")
+                             .withDescription("Filter gene3 by geneId, transcriptId, or chrom")
                              .hasArg()
                              .create("3")
             );
