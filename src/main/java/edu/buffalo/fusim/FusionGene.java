@@ -31,6 +31,8 @@ import edu.buffalo.fusim.gtf.Strand;
 public class FusionGene {
 
     private List<TranscriptRecord> genes = new ArrayList<TranscriptRecord>();
+    private List<FusionOption> options = new ArrayList<FusionOption>();
+    private FusionClass fusionClass = FusionClass.HYBRID;
     private String geneId;
     private String transcriptId;
 
@@ -63,23 +65,26 @@ public class FusionGene {
 
         StringBuffer fasta = new StringBuffer();
         fasta.append(">ref|"+this.getTranscriptId()
-                     +" fusionGene="+this.getGeneId());
+                     +" fusionGene="+this.getGeneId()
+                     +" fusionClass="+this.getFusionClass()
+                     +" fusionOptions="+StringUtils.join(this.options, ","));
 
         List<StringBuffer> seqs = new ArrayList<StringBuffer>();
         for(int b = 0; b < breaks.size(); b++) {
             int[] exons = breaks.get(b); 
             TranscriptRecord gene = genes.get(b);
             int breakno = b+1;
-            fasta.append(" exonIndex"+breakno+"="+StringUtils.join(ArrayUtils.toObject(exons), ",")
-                         +" chrom"+breakno+"="+gene.getChrom()
+            fasta.append(" chrom"+breakno+"="+gene.getChrom()
                          +" strand"+breakno+"="+gene.getStrand()
-                         +" exons"+breakno+"=");
+                         +" exonIndex"+breakno+"="+StringUtils.join(ArrayUtils.toObject(exons), ",")
+                         //+" exons"+breakno+"="
+                         );
         
             StringBuffer breakSeq = new StringBuffer();
             for(int i = 0; i < exons.length; i++) {
                 int[] exon = gene.getExons(cdsExonsOnly).get(exons[i]);
-                fasta.append((exon[0]+1)+"-"+exon[1]);
-                if(i != (exons.length-1)) fasta.append(",");
+                //fasta.append((exon[0]+1)+"-"+exon[1]);
+                //if(i != (exons.length-1)) fasta.append(",");
                 breakSeq.append(extractSeq.fetch(gene.getChrom(), gene.getStrand(), exon[0]+1, exon[1]));
             }
             seqs.add(breakSeq);
@@ -130,6 +135,8 @@ public class FusionGene {
         cols.add(StringUtils.join(ArrayUtils.toObject(breaks), ","));
         cols.add(StringUtils.join(ArrayUtils.toObject(exonStarts), ","));
         cols.add(StringUtils.join(ArrayUtils.toObject(exonEnds), ","));
+        cols.add(this.fusionClass.toString());
+        cols.add(StringUtils.join(this.options, ","));
 
         return cols;
     }
@@ -179,7 +186,7 @@ public class FusionGene {
     public static String[] getHeader() {
         return new String[]{
                 "fusionGene", "geneName", "name", "chrom", "strand", "exonCount",
-                "exonBases", "exonIndexes", "exonStarts", "exonEnds"
+                "exonBases", "exonIndexes", "exonStarts", "exonEnds", "fusionClass", "fusionOptions"
                 };
     }
     
@@ -204,5 +211,21 @@ public class FusionGene {
 
     public void addGene(TranscriptRecord gene) {
         genes.add(gene);
+    }
+
+    public FusionClass getFusionClass() {
+        return this.fusionClass;
+    }
+
+    public void setFusionClass(FusionClass fusionClass) {
+        this.fusionClass = fusionClass;
+    }
+
+    public List<FusionOption> getFusionOptions() {
+        return this.options;
+    }
+
+    public void addOption(FusionOption option) {
+        this.options.add(option);
     }
 }

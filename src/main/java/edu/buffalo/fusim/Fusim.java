@@ -321,19 +321,30 @@ public class Fusim {
             rt.setGeneSelectionMethod(geneSelectioMethod);
 
             List<FusionGene> rtFusions = rt.generate(nReadThrough, 2);
+            for(FusionGene g : rtFusions) {
+                g.setFusionClass(FusionClass.READ_THROUGH);
+            }
             fusions.addAll(rtFusions);
         }
         
         // Generate any tri-fusions
         if(nTriFusion > 0) {
             logger.info("Generating tri-fusion genes...");
-            fusions.addAll(fg.generate(nTriFusion, 3));
+            List<FusionGene> tfusions = fg.generate(nTriFusion, 3);
+            for(FusionGene g : tfusions) {
+                g.setFusionClass(FusionClass.TRI_FUSION);
+            }
+            fusions.addAll(tfusions);
         }
         
         // Generate any self-fusions
         if(nSelfFusion > 0) {
             logger.info("Generating self-fusion genes...");
-            fusions.addAll(fg.generate(nSelfFusion, 1));
+            List<FusionGene> sfusions = fg.generate(nSelfFusion, 1);
+            for(FusionGene g : sfusions) {
+                g.setFusionClass(FusionClass.SELF_FUSION);
+            }
+            fusions.addAll(sfusions);
         }
 
         if(fusions.size() == 0) {
@@ -389,6 +400,25 @@ public class Fusim {
                     breaks.add(f.getGene(2).generateExonBoundryBreak(cmd.hasOption("c")));
                     breaks.add(f.getGene(3).generateExonBoundryBreak(cmd.hasOption("c")));
                 }
+            }
+
+            // Set options for output
+            if(cmd.hasOption("a")) {
+                f.addOption(FusionOption.AUTO_CORRECT_ORIENTATION);
+            }
+            if(cmd.hasOption("c")) {
+                f.addOption(FusionOption.CDS_ONLY);
+            }
+            if(cmd.hasOption("d")) {
+                f.addOption(FusionOption.OUT_OF_FRAME);
+            } else {
+                f.addOption(FusionOption.SYMMETRICAL_EXONS);
+            }
+            if(cmd.hasOption("e")) {
+                f.addOption(FusionOption.KEEP_EXON_BOUNDRY);
+            }
+            if(cmd.hasOption("u")) {
+                f.addOption(FusionOption.FOREIGN_INSERTION);
             }
             
             if(textOutput != null) {
@@ -526,7 +556,7 @@ public class Fusim {
                              .create("d")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("keep-exon-boundries")
+                OptionBuilder.withLongOpt("keep-exon-boundry")
                              .withDescription("Generate fusion breaks on exon boundries only")
                              .create("e")
             );
