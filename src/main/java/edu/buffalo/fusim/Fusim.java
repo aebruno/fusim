@@ -359,7 +359,7 @@ public class Fusim {
 
             List<FusionGene> ifusions = ig.generate(nIntraChromFusion, 2);
             for(FusionGene g : ifusions) {
-                g.setFusionClass(FusionClass.INTER_CHROMOSOME);
+                g.setFusionClass(FusionClass.INTRA_CHROMOSOME);
             }
             fusions.addAll(ifusions);
         }
@@ -444,9 +444,6 @@ public class Fusim {
             if(cmd.hasOption("e")) {
                 f.addOption(FusionOption.KEEP_EXON_BOUNDRY);
             }
-            if(cmd.hasOption("u")) {
-                f.addOption(FusionOption.FOREIGN_INSERTION);
-            }
             
             if(textOutput != null) {
                 textOutput.print(f.outputText(breaks, cmd.hasOption("c")));
@@ -454,6 +451,7 @@ public class Fusim {
             
             if(fastaOutput != null) {
                 if(foreignInsertionLen > 0 && foreignInsertionCutoff > 0 && g <= foreignInsertionCutoff) {
+                    f.addOption(FusionOption.FOREIGN_INSERTION);
                     fastaOutput.println(f.outputFasta(breaks, referenceFile, cmd.hasOption("c"), cmd.hasOption("a"), foreignInsertionLen));
                 } else {
                     fastaOutput.println(f.outputFasta(breaks, referenceFile, cmd.hasOption("c"), cmd.hasOption("a")));
@@ -480,13 +478,13 @@ public class Fusim {
             );
         options.addOption(
             OptionBuilder.withLongOpt("gene-model")
-                         .withDescription("Gene Model file in refFlat format")
+                         .withDescription("Path to gene model file in refFlat format")
                          .hasArg()
                          .create("g")
         );
         options.addOption(
                 OptionBuilder.withLongOpt("reference")
-                             .withDescription("Reference genome indexed fasta, fai")
+                             .withDescription("Path to indexed reference genome fasta file (.fai)")
                              .hasArg()
                              .create("r")
             );
@@ -498,7 +496,7 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("fusions")
-                             .withDescription("Total number of fusions to generate")
+                             .withDescription("Number of fusions to generate using two randomly selected genes")
                              .hasArg()
                              .create("n")
             );
@@ -521,7 +519,7 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("read-through")
-                             .withDescription("Number of read through fusion genes")
+                             .withDescription("Number of read through fusions")
                              .hasArg()
                              .create("x")
             );
@@ -580,12 +578,12 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("auto-correct-orientation")
-                             .withDescription("Auto correct orientation of genes selected for a fusion if located on different strands")
+                             .withDescription("Auto correct orientation of fusion sequence if genes are located on different strands")
                              .create("a")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("out-of-frame")
-                             .withDescription("Allow fusion genes outside of reading frames")
+                             .withDescription("Allow fusions outside of reading frames. By default the reading frame is preserved")
                              .create("d")
             );
         options.addOption(
@@ -601,31 +599,31 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene1")
-                             .withDescription("Filter gene1 by geneId, transcriptId, or chrom")
+                             .withDescription("Filter for gene1")
                              .hasArg()
                              .create("1")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene2")
-                             .withDescription("Filter gene2 by geneId, transcriptId, or chrom")
+                             .withDescription("Filter for gene2")
                              .hasArg()
                              .create("2")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene3")
-                             .withDescription("Filter gene3 by geneId, transcriptId, or chrom")
+                             .withDescription("Filter for gene3")
                              .hasArg()
                              .create("3")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("foreign-insertion-length")
-                             .withDescription("Length of homologue mediated infusion")
+                             .withDescription("Maxium length of randomly generated sequence to insert between fusion breakpoints")
                              .hasArg()
                              .create("u")
             );
         options.addOption(
                 OptionBuilder.withLongOpt("foreign-insertion-perecent")
-                             .withDescription("Percent of fusion genes to add homologue mediated infusions")
+                             .withDescription("Percent of fusions to insert foreign sequence between fusion breakpoints")
                              .hasArg()
                              .create("w")
             );
