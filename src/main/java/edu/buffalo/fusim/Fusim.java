@@ -179,12 +179,12 @@ public class Fusim {
             }
         }
 
-        int nInterChromFusion = 0;
+        int nIntraChromFusion = 0;
         if(cmd.hasOption("y")) {
             try {
-                nInterChromFusion = Integer.parseInt(cmd.getOptionValue("y"));
+                nIntraChromFusion = Integer.parseInt(cmd.getOptionValue("y"));
             } catch(NumberFormatException e) {
-                printHelpAndExit(options, "Number of inter-chromosome fusions (-y) must be a number");
+                printHelpAndExit(options, "Number of intra-chromosome fusions (-y) must be a number");
             }
         }
 
@@ -350,14 +350,14 @@ public class Fusim {
             fusions.addAll(tfusions);
         }
         
-        // Generate any inter chromosome fusions
-        if(nInterChromFusion > 0) {
-            logger.info("Generating inter-chromosome fusions...");
-            InterChromGenerator ig = new InterChromGenerator();
+        // Generate any intra chromosome fusions
+        if(nIntraChromFusion > 0) {
+            logger.info("Generating intra-chromosome fusions...");
+            IntraChromGenerator ig = new IntraChromGenerator();
             ig.setGeneSelector(selector);
             ig.setGeneSelectionMethod(geneSelectioMethod);
 
-            List<FusionGene> ifusions = ig.generate(nInterChromFusion, 2);
+            List<FusionGene> ifusions = ig.generate(nIntraChromFusion, 2);
             for(FusionGene g : ifusions) {
                 g.setFusionClass(FusionClass.INTER_CHROMOSOME);
             }
@@ -538,8 +538,8 @@ public class Fusim {
                              .create("s")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("inter-chrom")
-                             .withDescription("Number of inter-chromosome fusions (fusions within single chrom)")
+                OptionBuilder.withLongOpt("intra-chrom")
+                             .withDescription("Number of intra-chromosome fusions (fusions within single chrom)")
                              .hasArg()
                              .create("y")
             );

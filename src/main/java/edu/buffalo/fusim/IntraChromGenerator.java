@@ -30,8 +30,8 @@ import org.apache.commons.logging.LogFactory;
 import cern.colt.list.IntArrayList;
 import cern.jet.random.sampling.RandomSamplingAssistant;
 
-public class InterChromGenerator implements FusionGenerator {
-    private Log logger = LogFactory.getLog(InterChromGenerator.class);
+public class IntraChromGenerator implements FusionGenerator {
+    private Log logger = LogFactory.getLog(IntraChromGenerator.class);
     private GeneSelector selector;
     private GeneSelectionMethod method;
     private List<String[]> filters;
