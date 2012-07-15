@@ -37,6 +37,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -643,8 +644,16 @@ public class Fusim {
     public void printHelpAndExit(Options options, String message) {
         if (message != null)
             logger.fatal("Usage error: " + message + "\n");
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("fusim", options);
+        // Print CLI options
+        //HelpFormatter formatter = new HelpFormatter();
+        //formatter.printHelp("fusim", options);
+        try {
+            System.out.print(
+                IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fusim.options"))
+            );
+        } catch (Exception e){
+            logger.fatal("Failed to load options help file: "+e.getMessage());
+        }
         if (message != null) {
             System.exit(1);
         } else {
@@ -662,7 +671,7 @@ public class Fusim {
             InputStream inStream = this.getClass().getClassLoader().getResourceAsStream("version.properties");
             properties.load(inStream);
         } catch (Exception e){
-            logger.warn("Failed to load version data: "+e.getMessage());
+            logger.fatal("Failed to load version data: "+e.getMessage());
         }
         System.out.println("v"+properties.getProperty("fusim.version"));
         System.exit(0);

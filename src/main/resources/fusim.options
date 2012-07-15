@@ -1,0 +1,80 @@
+
+usage: fusim --gene-model=refFlat.txt [options]
+
+ -g,--gene-model <arg>                   *Required* Path to gene model 
+                                         file in refFlat format
+ -h,--help                               print usage info
+ -v,--version                            Display version info
+
+==================================================================
+Output
+==================================================================
+ -f,--fasta-output <arg>                 File name of FASTA output
+ -t,--text-output <arg>                  File name of text output
+ -r,--reference <arg>                    Path to indexed reference genome
+                                         fasta file (.fai). Required for
+                                         FASTA output.
+
+==================================================================
+Fusion Types
+==================================================================
+ -j,--tri-fusion <arg>                   Number of fusions with three
+                                         genes
+ -n,--fusions <arg>                      Number of fusions to generate
+                                         using two randomly selected genes
+ -s,--self-fusion <arg>                  Number of self-fusions (fusions
+                                         with single gene)
+ -x,--read-through <arg>                 Number of read through fusions
+ -y,--intra-chrom <arg>                  Number of intra-chromosome
+                                         fusions (fusions within single
+                                         chrom)
+
+==================================================================
+Fusion Options
+==================================================================
+ -a,--auto-correct-orientation           Auto correct orientation of
+                                         fusion sequence if genes are
+                                         located on different strands
+ -c,--cds-only                           Only include CDS exons
+ -d,--out-of-frame                       Allow fusions outside of reading
+                                         frames. By default the reading
+                                         frame is preserved
+ -e,--keep-exon-boundry                  Generate fusion breaks on exon
+                                         boundries only
+ -u,--foreign-insertion-length <arg>     Maxium length of randomly
+                                         generated sequence to insert
+                                         between fusion breakpoints
+ -w,--foreign-insertion-perecent <arg>   Percent of fusions to insert
+                                         foreign sequence between fusion
+                                         breakpoints
+
+==================================================================
+Gene Selection
+==================================================================
+ -1,--gene1 <arg>                        Filter for gene1
+ -2,--gene2 <arg>                        Filter for gene2
+ -3,--gene3 <arg>                        Filter for gene3
+ -b,--background-reads <arg>             Path to BAM file containing
+                                         background reads. Genes will be
+                                         selected for fusions according to
+                                         the read profile of the
+                                         background reads.
+ -k,--rpkm-cutoff <arg>                  RPKM cutoff when using background
+                                         BAM file. Genes below the cutoff
+                                         will be ignored
+ -l,--limit <arg>                        Limit all fusions to specific
+                                         geneId, transcriptId, or chrom
+ -m,--gene-selection-method <arg>        Method to use when selecting
+                                         genes for fusions:
+                                         uniform|empirical|binned
+ -p,--threads <arg>                      Number of threads to spawn when
+                                         processing background BAM file
+
+==================================================================
+Convert GTF/GFF gene model to refFlat format for use with Fusim
+==================================================================
+ -i,--gtf <arg>                          Input GTF file for conversion
+ -o,--output <arg>                       Output refFlat file for
+                                         conversion
+ -z,--convert                            Convert GTF/GFF to refFlat
+                                         (genePred) format
