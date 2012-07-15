@@ -32,7 +32,7 @@ public class FusionGene {
 
     private List<TranscriptRecord> genes = new ArrayList<TranscriptRecord>();
     private List<FusionOption> options = new ArrayList<FusionOption>();
-    private FusionClass fusionClass = FusionClass.HYBRID;
+    private FusionType fusionType = FusionType.HYBRID;
     private String geneId;
     private String transcriptId;
 
@@ -66,7 +66,7 @@ public class FusionGene {
         StringBuffer fasta = new StringBuffer();
         fasta.append(">ref|"+this.getTranscriptId()
                      +" fusionGene="+this.getGeneId()
-                     +" fusionClass="+this.getFusionClass()
+                     +" fusionType="+this.getFusionType()
                      +" fusionOptions="+StringUtils.join(this.options, ","));
 
         List<StringBuffer> seqs = new ArrayList<StringBuffer>();
@@ -135,7 +135,7 @@ public class FusionGene {
         cols.add(StringUtils.join(ArrayUtils.toObject(breaks), ","));
         cols.add(StringUtils.join(ArrayUtils.toObject(exonStarts), ","));
         cols.add(StringUtils.join(ArrayUtils.toObject(exonEnds), ","));
-        cols.add(this.fusionClass.toString());
+        cols.add(this.fusionType.toString());
         cols.add(StringUtils.join(this.options, ","));
 
         return cols;
@@ -186,7 +186,7 @@ public class FusionGene {
     public static String[] getHeader() {
         return new String[]{
                 "fusionGene", "geneName", "name", "chrom", "strand", "exonCount",
-                "exonBases", "exonIndexes", "exonStarts", "exonEnds", "fusionClass", "fusionOptions"
+                "exonBases", "exonIndexes", "exonStarts", "exonEnds", "fusionType", "fusionOptions"
                 };
     }
     
@@ -213,12 +213,12 @@ public class FusionGene {
         genes.add(gene);
     }
 
-    public FusionClass getFusionClass() {
-        return this.fusionClass;
+    public FusionType getFusionType() {
+        return this.fusionType;
     }
 
-    public void setFusionClass(FusionClass fusionClass) {
-        this.fusionClass = fusionClass;
+    public void setFusionType(FusionType fusionType) {
+        this.fusionType = fusionType;
     }
 
     public List<FusionOption> getFusionOptions() {

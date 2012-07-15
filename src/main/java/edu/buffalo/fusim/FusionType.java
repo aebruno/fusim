@@ -22,7 +22,7 @@ package edu.buffalo.fusim;
  * @author Andrew E. Bruno
  * 
  */
-public enum FusionClass {
+public enum FusionType {
     SELF_FUSION {
         public String toString() {
             return "self_fusion";

@@ -336,7 +336,7 @@ public class Fusim {
 
             List<FusionGene> rtFusions = rt.generate(nReadThrough, 2);
             for(FusionGene g : rtFusions) {
-                g.setFusionClass(FusionClass.READ_THROUGH);
+                g.setFusionType(FusionType.READ_THROUGH);
             }
             fusions.addAll(rtFusions);
         }
@@ -346,7 +346,7 @@ public class Fusim {
             logger.info("Generating tri-fusion genes...");
             List<FusionGene> tfusions = fg.generate(nTriFusion, 3);
             for(FusionGene g : tfusions) {
-                g.setFusionClass(FusionClass.TRI_FUSION);
+                g.setFusionType(FusionType.TRI_FUSION);
             }
             fusions.addAll(tfusions);
         }
@@ -360,7 +360,7 @@ public class Fusim {
 
             List<FusionGene> ifusions = ig.generate(nIntraChromFusion, 2);
             for(FusionGene g : ifusions) {
-                g.setFusionClass(FusionClass.INTRA_CHROMOSOME);
+                g.setFusionType(FusionType.INTRA_CHROMOSOME);
             }
             fusions.addAll(ifusions);
         }
@@ -370,7 +370,7 @@ public class Fusim {
             logger.info("Generating self-fusion genes...");
             List<FusionGene> sfusions = fg.generate(nSelfFusion, 1);
             for(FusionGene g : sfusions) {
-                g.setFusionClass(FusionClass.SELF_FUSION);
+                g.setFusionType(FusionType.SELF_FUSION);
             }
             fusions.addAll(sfusions);
         }
