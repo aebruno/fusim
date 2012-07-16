@@ -376,7 +376,7 @@ public class Fusim {
         }
 
         if(fusions.size() == 0) {
-            fatalError("No genes found to simulate fusions!");    
+            fatalError("No fusions to simulate! Check to be sure you have -j,-n,-s,-x,-y specified and your filters are correct.");    
         }
         
         if(textOutput != null) {

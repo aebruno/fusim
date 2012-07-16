@@ -2,13 +2,13 @@
 Fusim - FUSion SIMulator
 ===============================================================================
 
-Fusim is a program to simulate fusion genes from a reference genome. 
+Fusim is a program to simulate fusion transcripts from a reference genome. 
 
 -------------------------------------------------------------------------
 Requirements
 -------------------------------------------------------------------------
 
-- Java version 1.7 or greater
+- Java version 1.5 or greater
 - UCSC RefFlat (GenePred table format)
     See: http://genome.ucsc.edu/FAQ/FAQformat.html#format9
 - Reference genome in fasta 
@@ -46,7 +46,7 @@ Basic Usage
 
     $ java -jar fusim.jar -h
 
-- Generate Fusion genes using UCSC refFlat.txt gene model:
+- Generate Fusion transcripts using UCSC refFlat.txt gene model:
 
   $ java -jar fusim.jar --gene-model refFlat.txt --fusions 10
 
@@ -62,7 +62,7 @@ Basic Usage
          --fasta-output=fusions.fasta \
          --text-output=fusions.txt
 
-- Generate Fusion genes based on a background dataset (BAM file) using RPKM
+- Generate Fusion transcripts based on a background dataset (BAM file) using RPKM
   cutoff of 0.2. Note background BAM files must be indexed (*.bam.bai):
 
   # Be sure to index your BAM file first
@@ -71,17 +71,16 @@ Basic Usage
   $ java -jar fusim.jar \
          --gene-model=refFlat.txt \
          --fusions=10 \
-         --background=myreads.bam \
+         --background-reads=myreads.bam \
          --rpkm-cutoff=0.2
 
-- Generate read through genes:
+- Generate read through transcripts:
 
   $ java -jar fusim.jar \
          --gene-model=refFlat.txt \
-         --fusions=10 \
          --read-through=10
 
-- Only use CDS exons when generating fusion genes:
+- Only use CDS exons when generating fusion transcripts:
 
   $ java -jar fusim.jar \
          --gene-model=refFlat.txt \
