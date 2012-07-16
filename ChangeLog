@@ -2,9 +2,26 @@
 Fusim - ChangeLog
 ================================================================================
 
+-2012-07-16 (v0.0.5)
+
+	- Added intra-chromosome fusion generator. Simulates fusions within a
+	  single chromosome.
+	- Modified text/FASTA output to include fusion type and fusion options
+	- Added option to limit fusion generation to use only specific geneID,
+	  transcriptID, and chrom
+	- Added foreign insertion option which inserts a randomly generated
+	  sequence between fusion breakpoints
+	- Added option to generate self-fusions. These are fusion transcripts with
+	  only one gene that fuses with itself
+	- Added option to generate tri-fusion genes. These are fusions from 3
+	  genes
+	- Removed java 7 requirement. Now only requires java 1.5 and above
+	- Removed main code relating to ART and bowtie alignments. This can be
+	  done easily via shells scripts
+
 - 2012-07-05 (v0.0.4)
 
-    - Removed options for ART and bowtie.
+	- Removed options for ART and bowtie.
 	- Fixed text output for generated fusion genes to be more like refFlat
 	  gene prediction format.
 	- Refactored gene selection method. Added new option for selecting the
@@ -15,7 +32,7 @@ Fusim - ChangeLog
 	  background dataset using RPKM. The binned method computes the RPKM value
 	  and sorts genes into n bins. Two genes from each bin are then selected
 	  for fusions. 
-    - Added option to force fusions breaks on exon boundries.
+	- Added option to force fusions breaks on exon boundries.
 	- Added option to allow generation of fusion genes outside of reading
 	  frames
 	- Added option to auto-correct orientation of genes selected for a fusion
