@@ -588,8 +588,8 @@ public class Fusim {
                              .create("d")
             );
         options.addOption(
-                OptionBuilder.withLongOpt("keep-exon-boundry")
-                             .withDescription("Generate fusion breaks on exon boundries only")
+                OptionBuilder.withLongOpt("keep-exon-boundary")
+                             .withDescription("Generate fusion breaks on exon boundaries only")
                              .create("e")
             );
         options.addOption(

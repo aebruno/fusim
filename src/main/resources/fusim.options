@@ -39,8 +39,8 @@ Fusion Options
  -d,--out-of-frame                       Allow fusions outside of reading
                                          frames. By default the reading
                                          frame is preserved
- -e,--keep-exon-boundry                  Generate fusion breaks on exon
-                                         boundries only
+ -e,--keep-exon-boundary                 Generate fusion breaks on exon
+                                         boundaries only
  -u,--foreign-insertion-length <arg>     Maxium length of randomly
                                          generated sequence to insert
                                          between fusion breakpoints
