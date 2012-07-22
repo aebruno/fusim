@@ -42,12 +42,13 @@ public class BackgroundGenerator implements FusionGenerator {
         
         Collections.sort(transcripts, new TranscriptCompare());
         
-        // First bin genes into RPKM buckets
-        GeneBins geneBins = new GeneBins(nFusions);
-        geneBins.fill(transcripts);
 
         if(GeneSelectionMethod.BINNED.equals(method)) {
             logger.info("Generating fusions using RPKM bins...");
+            // First bin genes into RPKM buckets
+            GeneBins geneBins = new GeneBins(nFusions);
+            geneBins.fill(transcripts);
+
             for(int i = 0; i < geneBins.size(); i++) {
                 IntArrayList b = geneBins.getBin(i);
                 b.trimToSize();
@@ -69,12 +70,16 @@ public class BackgroundGenerator implements FusionGenerator {
             }
         } else if(GeneSelectionMethod.EMPIRICAL.equals(method)) {
             logger.info("Generating fusions based on empirical background distribution...");
+
+            // First bin genes into RPKM buckets
+            EmpiricalGeneBins geneBins = new EmpiricalGeneBins();
+            geneBins.fill(transcripts);
+
             Random r = new Random();
             int[] distribution = new int[transcripts.size()];
             int index = 0;
             for(int i = 0; i < geneBins.size(); i++) {
                 IntArrayList b = geneBins.getBin(i);
-                b.trimToSize();
                 for(int j = 0; j < b.size(); j++) {
                     distribution[index] = i;    
                     index++;
@@ -146,6 +151,52 @@ public class BackgroundGenerator implements FusionGenerator {
         
         public int size() {
             return this.binsize;
+        }
+        
+        public IntArrayList getBin(int index) {
+            return this.bins[index];
+        }
+    }
+
+    protected class EmpiricalGeneBins {
+        private IntArrayList[] bins;
+        
+        public void fill(List<TranscriptRecord> values) {
+            int binsize = (int)Math.ceil(values.size()/10);
+            if(values.size() < binsize) {
+                binsize = 1;
+            }
+
+            IntArrayList[] tmpbins = new IntArrayList[binsize];
+            for(int i = 0; i < binsize; i++) {
+                tmpbins[i] = new IntArrayList();
+            }
+
+            TranscriptRecord min = values.get(0);
+            TranscriptRecord max = values.get(values.size()-1);
+
+            double inc = (max.getRPKM()-min.getRPKM())/binsize;
+            for(int i = 0; i < values.size(); i++) {
+                int index = (int)(values.get(i).getRPKM()/inc);
+                if(index > tmpbins.length-1) index = tmpbins.length - 1;
+                tmpbins[index].add(i);
+            }
+
+            List<IntArrayList> list = new ArrayList<IntArrayList>();
+            for(int i = 0; i < tmpbins.length; i++) {
+                IntArrayList b = tmpbins[i];
+                b.trimToSize();
+                if(b.size() > 0) list.add(b);
+            } 
+
+            this.bins = new IntArrayList[list.size()];
+            for(int i = 0; i < list.size(); i++) {
+                this.bins[i] = list.get(i);
+            }
+        }
+        
+        public int size() {
+            return this.bins.length;
         }
         
         public IntArrayList getBin(int index) {
