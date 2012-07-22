@@ -275,15 +275,10 @@ public class Fusim {
             }
         }
         
-        logger.info("------------------------------------------------------------------------");
+        logger.info("========================================================================");
         logger.info("Running Fusim with the following settings:");
-        logger.info("------------------------------------------------------------------------");
+        logger.info("========================================================================");
         logger.info("Reference Gene Model: "+geneModelFile.getAbsolutePath());
-        logger.info("Number of simulated fusion genes: "+nFusions);
-        logger.info("Number of read through genes: "+nReadThrough);
-        logger.info("Auto-correct orientation: "+(cmd.hasOption("a") ? "yes" : "no"));
-        logger.info("Allow fusion genes outside of ORF: "+(cmd.hasOption("d") ? "yes" : "no"));
-        logger.info("Force fusion breaks on exon boundries: "+(cmd.hasOption("e") ? "yes" : "no"));
         if(cmd.hasOption("t")) {
             logger.info("Text Output: "+("-".equals(cmd.getOptionValue("t")) ? "<stdout>" : cmd.getOptionValue("t")));
         }
@@ -293,14 +288,41 @@ public class Fusim {
         if(!cmd.hasOption("f") && !cmd.hasOption("t")) {
             logger.info("Text Output: <stdout>");
         }
+        logger.info("");
+        logger.info("------------------");
+        logger.info("Gene Selection");
+        logger.info("------------------");
         if(cmd.hasOption("b")) {
-            logger.info("-- Generating fusions based on background dataset --");
-            logger.info("Background BAM file: "+bamFile.getAbsolutePath());
+            logger.info("Mode: background reads");
+            logger.info("BAM file: "+bamFile.getAbsolutePath());
             logger.info("RPKM cutoff: "+rpkmCutoff);
             logger.info("Number of threads: "+nThreads);
             logger.info("Gene selection method: "+geneSelectioMethod.toString());
+        } else {
+            logger.info("Mode: gene model");
         }
-        logger.info("------------------------------------------------------------------------");
+        logger.info("");
+        logger.info("------------------");
+        logger.info("Type of fusions");
+        logger.info("------------------");
+        logger.info("Hybrid: "+nFusions);
+        logger.info("Self: "+nSelfFusion);
+        logger.info("Complex: "+nTriFusion);
+        logger.info("Intra-chromosome: "+nIntraChromFusion);
+        logger.info("Read through: "+nReadThrough);
+        logger.info("");
+        logger.info("------------------");
+        logger.info("Fusion options");
+        logger.info("------------------");
+        logger.info("CDS only: "+(cmd.hasOption("c") ? "yes" : "no"));
+        logger.info("Auto-correct orientation: "+(cmd.hasOption("a") ? "yes" : "no"));
+        logger.info("Allow fusions outside of ORF: "+(cmd.hasOption("d") ? "yes" : "no"));
+        logger.info("Force fusion breaks on exon boundries: "+(cmd.hasOption("e") ? "yes" : "no"));
+        if(cmd.hasOption("u")) {
+            logger.info("Foreign insertion max length: "+foreignInsertionLen);
+            logger.info("Foreign insertion percent: "+foreignInsertionPct);
+        }
+        logger.info("========================================================================");
         
         GeneModelParser parser = new UCSCRefFlatParser(cmd.hasOption("e"), cmd.hasOption("c"), limit);
         GeneSelector selector = null;
