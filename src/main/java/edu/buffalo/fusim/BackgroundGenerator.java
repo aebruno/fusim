@@ -68,12 +68,18 @@ public class BackgroundGenerator implements FusionGenerator {
                 }
                 fusions.add(new FusionGene(genes));
             }
-        } else if(GeneSelectionMethod.EMPIRICAL.equals(method)) {
+        } else if(GeneSelectionMethod.EMPIRICAL.equals(method) ||
+                  GeneSelectionMethod.EMPIRICAL_STURGES.equals(method)) {
             logger.info("Generating fusions based on empirical background distribution...");
+            boolean sturges = false;
+            if(GeneSelectionMethod.EMPIRICAL_STURGES.equals(method)) {
+                logger.info("Using sturges method for computing bin sizes...");
+                sturges = true;
+            }
 
             // First bin genes into RPKM buckets
             EmpiricalGeneBins geneBins = new EmpiricalGeneBins();
-            geneBins.fill(transcripts);
+            geneBins.fill(transcripts, sturges);
 
             Random r = new Random();
             int[] distribution = new int[transcripts.size()];
@@ -162,7 +168,15 @@ public class BackgroundGenerator implements FusionGenerator {
         private IntArrayList[] bins;
         
         public void fill(List<TranscriptRecord> values) {
-            int binsize = (int)Math.ceil(values.size()/10);
+            this.fill(values, false);
+        }
+
+        public void fill(List<TranscriptRecord> values, boolean sturges) {
+            int binsize = (int)Math.sqrt(values.size());
+            if(sturges) {
+                binsize = (int)(Math.log(values.size()+1)/Math.log(2));
+            }
+
             if(values.size() < binsize) {
                 binsize = 1;
             }

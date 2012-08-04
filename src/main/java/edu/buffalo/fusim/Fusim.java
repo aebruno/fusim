@@ -595,7 +595,7 @@ public class Fusim {
             );
         options.addOption(
                 OptionBuilder.withLongOpt("gene-selection-method")
-                             .withDescription("Method to use when selecting genes for fusions: uniform|empirical|binned")
+                             .withDescription("Method to use when selecting genes for fusions: uniform|binned|empirical|empirical-sturges")
                              .hasArg()
                              .create("m")
             );

@@ -33,6 +33,11 @@ public enum GeneSelectionMethod {
             return "binned";
         }
     },
+    EMPIRICAL_STURGES {
+        public String toString() {
+            return "empirical-sturges";
+        }
+    },
     EMPIRICAL {
         public String toString() {
             return "empirical";
@@ -46,6 +51,8 @@ public enum GeneSelectionMethod {
             return GeneSelectionMethod.BINNED;
         } else if(str.equalsIgnoreCase(GeneSelectionMethod.EMPIRICAL.toString())) {
             return GeneSelectionMethod.EMPIRICAL;
+        } else if(str.equalsIgnoreCase(GeneSelectionMethod.EMPIRICAL_STURGES.toString())) {
+            return GeneSelectionMethod.EMPIRICAL_STURGES;
         } else {
             return null;
         }
