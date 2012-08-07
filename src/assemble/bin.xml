@@ -16,6 +16,10 @@
         <include>ChangeLog</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>${basedir}/scripts</directory>
+      <outputDirectory>/scripts</outputDirectory>
+    </fileSet>
   </fileSets>
   <files>
     <file>
