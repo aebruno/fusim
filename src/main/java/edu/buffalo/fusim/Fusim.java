@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 import net.sf.picard.sam.MergeSamFiles;
 
@@ -407,6 +408,7 @@ public class Fusim {
 
         int foreignInsertionCutoff = (int)(foreignInsertionPct*fusions.size());
         
+        Random rgen = new Random();
         for(int g = 0; g < fusions.size(); g++) {
             FusionGene f = fusions.get(g);
 
@@ -433,11 +435,11 @@ public class Fusim {
                 for(int i = 0; i < breaks.size(); i++) {
                     int[] exons = breaks.get(i);
                     int[] lastExon = f.getGene(i).getExons(cmd.hasOption("c")).get(exons[exons.length-1]);
-                    int halfWayIndex = (lastExon[1]-lastExon[0])/2;
-                    while(halfWayIndex % 3 != 0) {
-                        halfWayIndex--;
+                    int randIndex = rgen.nextInt(lastExon[1]-lastExon[0]);
+                    while(randIndex % 3 != 0) {
+                        randIndex--;
                     }
-                    f.getGene(i).getExons(cmd.hasOption("c")).get(exons[exons.length-1])[1] -= halfWayIndex;
+                    f.getGene(i).getExons(cmd.hasOption("c")).get(exons[exons.length-1])[1] -= randIndex;
                 }
             } else if(cmd.hasOption("e") && !cmd.hasOption("d")) {
                 // Keep ORF (don't allow out of frame) and don't allow splitting of exons (keep exon boundries)
