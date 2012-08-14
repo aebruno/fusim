@@ -2,6 +2,13 @@
 Fusim - ChangeLog
 ================================================================================
 
+-2012-08-13 (v0.1.0)
+
+    - Added script to simulate sequencing reads using ART
+    - Modified fusions to select random breakpoints
+    - Modified background generator empirical method to add sturges method
+    - Cleaned up runtime status messages
+
 -2012-07-16 (v0.0.5)
 
 	- Added intra-chromosome fusion generator. Simulates fusions within a
