@@ -11,65 +11,65 @@ Fusim - ChangeLog
 
 -2012-07-16 (v0.0.5)
 
-	- Added intra-chromosome fusion generator. Simulates fusions within a
-	  single chromosome.
-	- Modified text/FASTA output to include fusion type and fusion options
-	- Added option to limit fusion generation to use only specific geneID,
-	  transcriptID, and chrom
-	- Added foreign insertion option which inserts a randomly generated
-	  sequence between fusion breakpoints
-	- Added option to generate self-fusions. These are fusion transcripts with
-	  only one gene that fuses with itself
-	- Added option to generate tri-fusion genes. These are fusions from 3
-	  genes
-	- Removed java 7 requirement. Now only requires java 1.5 and above
-	- Removed main code relating to ART and bowtie alignments. This can be
-	  done easily via shells scripts
+    - Added intra-chromosome fusion generator. Simulates fusions within a
+      single chromosome.
+    - Modified text/FASTA output to include fusion type and fusion options
+    - Added option to limit fusion generation to use only specific geneID,
+      transcriptID, and chrom
+    - Added foreign insertion option which inserts a randomly generated
+      sequence between fusion breakpoints
+    - Added option to generate self-fusions. These are fusion transcripts with
+      only one gene that fuses with itself
+    - Added option to generate tri-fusion genes. These are fusions from 3
+      genes
+    - Removed java 7 requirement. Now only requires java 1.5 and above
+    - Removed main code relating to ART and bowtie alignments. This can be
+      done easily via shells scripts
 
 - 2012-07-05 (v0.0.4)
 
-	- Removed options for ART and bowtie.
-	- Fixed text output for generated fusion genes to be more like refFlat
-	  gene prediction format.
-	- Refactored gene selection method. Added new option for selecting the
-	  method to use for selecting genes to include in fusions. Valid methods
-	  are uniform, empirical, or binned. The uniform method selects 2
-	  genes at random to include in a fusion. The empirical method randomly
-	  selects 2 genes based on the empirical distribution of the given
-	  background dataset using RPKM. The binned method computes the RPKM value
-	  and sorts genes into n bins. Two genes from each bin are then selected
-	  for fusions. 
-	- Added option to force fusions breaks on exon boundries.
-	- Added option to allow generation of fusion genes outside of reading
-	  frames
-	- Added option to auto-correct orientation of genes selected for a fusion
-	  if located on different strands.
+    - Removed options for ART and bowtie.
+    - Fixed text output for generated fusion genes to be more like refFlat
+      gene prediction format.
+    - Refactored gene selection method. Added new option for selecting the
+      method to use for selecting genes to include in fusions. Valid methods
+      are uniform, empirical, or binned. The uniform method selects 2
+      genes at random to include in a fusion. The empirical method randomly
+      selects 2 genes based on the empirical distribution of the given
+      background dataset using RPKM. The binned method computes the RPKM value
+      and sorts genes into n bins. Two genes from each bin are then selected
+      for fusions. 
+    - Added option to force fusions breaks on exon boundries.
+    - Added option to allow generation of fusion genes outside of reading
+      frames
+    - Added option to auto-correct orientation of genes selected for a fusion
+      if located on different strands.
 
 - 2012-07-01 (v0.0.3)
 
-	- Added support for executing external program (ART) to simulate Illumina
-	  reads from generated fusion genes.
-	- Added option to align simulated reads from ART using Bowtie. 
-	- Added option to merge resulting alignments with background dataset.
+    - Added support for executing external program (ART) to simulate Illumina
+      reads from generated fusion genes.
+    - Added option to align simulated reads from ART using Bowtie. 
+    - Added option to merge resulting alignments with background dataset.
 
 - 2012-06-30 (v0.0.2)
 
-	- Added conversion option to convert from GFF/GTF to refFlat genePred
-	  format. Should behave similiar to gtfToGenePred utility from Ken source
-	  utilities
-	- Only use canonical chromosomes. Skip the haplotypes and unassembled
-	  chromosomes (ignore chroms which contain "_")
-	- Added option to control number of threads to spawn when processing
-	  background BAM file
-	- Added option to configure RPKM cutoff value
+    - Added conversion option to convert from GFF/GTF to refFlat genePred
+      format. Should behave similiar to gtfToGenePred utility from Ken source
+      utilities
+    - Only use canonical chromosomes. Skip the haplotypes and unassembled
+      chromosomes (ignore chroms which contain "_")
+    - Added option to control number of threads to spawn when processing
+      background BAM file
+    - Added option to configure RPKM cutoff value
 
 - 2012-06-29 (v0.0.1)
 
-	- Re-factored GeneModelParser to use refFlat instead of refGene. Added a
-	  utility to convert GTF files to refFlat format.
-	- Added GTF parser. Updated code to use Strand enum.
-	- Implemented generation of read through fusion genes. Added option for
-	  specifying the number of read through fusion events to generate.
-	- Added output to both FASTA and TXT formats.
-	- Added option to include only CDS exons or all exons when generating
-	  fusion genes
+    - Re-factored GeneModelParser to use refFlat instead of refGene. Added a
+      utility to convert GTF files to refFlat format.
+    - Added GTF parser. Updated code to use Strand enum.
+    - Implemented generation of read through fusion genes. Added option for
+      specifying the number of read through fusion events to generate.
+    - Added output to both FASTA and TXT formats.
+    - Added option to include only CDS exons or all exons when generating
+      fusion genes
