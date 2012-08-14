@@ -16,32 +16,50 @@
   <body>
     <div id="container">
       <div class="inner">
-
         <header>
           <h1><a href="index.html"><img src="images/fusim-logo.png" alt="Fusim" /></a></h1>
           <h2>a software tool for simulating fusion transcripts</h2>
         </header>
-
-        <section id="downloads" class="clearfix">
-          <a href="https://github.com/aebruno/fusim/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/aebruno/fusim/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-          <a href="https://github.com/aebruno/fusim" id="view-on-github" class="button"><span>View on GitHub</span></a>
-        </section>
-
-        <hr>
-
         <section id="main_content">
-          <h1>About</h1>
-
-          <p>Fusim is a software tool for simulating fusion transcripts.</p>
-
-          <h1>Documentation</h1>
-
+          <h1>Installation</h1>
+          <h2>Installing Fusim</h2>
+          <p>Fusim is written in Java and requires a working Java runtime version 1.5 or greater</p>
           <ol>
-            <li><a href="install.html">Installation</a></li>
-            <li><a href="manual.html">User Guide</a></li>
+            <li><a href="https://github.com/aebruno/fusim/zipball/master">Download Fusim</a></li>
+            <li>Unpack the .tar.gz or .zip file as follows:
+<pre>$ unzip fusim-X.X.X.zip
+$ cd fusim-X.X.X
+</pre>
+            </li>
+            <li>Run Fusim:
+<pre>$ java -jar fusim.jar --help
+
+usage: fusim --gene-model=refFlat.txt [options]
+</pre>
+            </li>
           </ol>
 
+          <h2>Download gene model from UCSC</h2>
+          <ol>
+            <li>Download UCSC RefFlat GenePred data:
+<pre>$ wget -O refFlat.txt.gz http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refFlat.txt
+$ gunzip refFlat.txt.gz
+</pre>
+            </li>
+        </ol>
+        <h2>Index reference genome file</h2>
+        <ol>
+            <li>Download genome reference from UCSC:
+<pre>$ wget ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz</pre>
+            </li>
+            <li>Extract and build one single fasta file:
+<pre>$ tar -xzf chromFa.tar.gz
+$ cat chr*.fa &gt; hg19.fa</pre>
+            </li>
+            <li>Index using samtools:
+<pre>$ samtools faidx hg19.fa</pre>
+            </li>
+          </ol>
         </section>
 
         <footer>
