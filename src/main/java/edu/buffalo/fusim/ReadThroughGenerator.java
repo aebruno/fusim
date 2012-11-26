@@ -64,7 +64,7 @@ public class ReadThroughGenerator implements FusionGenerator {
             int res = o1.getChrom().compareTo(o2.getChrom());
             if (res != 0) return res;
             
-            return Integer.compare(o1.getTxStart(), o2.getTxStart());
+            return Integer.valueOf(o1.getTxStart()).compareTo(Integer.valueOf(o2.getTxStart()));
         }
     }
 
