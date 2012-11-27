@@ -151,7 +151,7 @@ public class BackgroundSelector implements GeneSelector {
                     }
                 }
             } catch (IOException e) {
-                log.fatal("I/O error while reading gene model file file: " + e.getMessage());
+                log.fatal("I/O error while reading gene model file: " + e.getMessage());
             }
         }
     }
