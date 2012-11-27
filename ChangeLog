@@ -2,6 +2,11 @@
 Fusim - ChangeLog
 ================================================================================
 
+-2012-11-27 (v0.2.0)
+
+    - Optimized GTF-to-Reflat conversion to use less memory
+    - Fix Java 1.5 and 1.6 compatibility bug
+
 -2012-08-13 (v0.1.0)
 
     - Added script to simulate sequencing reads using ART

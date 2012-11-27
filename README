@@ -8,7 +8,7 @@ Fusim is a program to simulate fusion transcripts from a reference genome.
 Requirements
 -------------------------------------------------------------------------
 
-- Java version 1.5 or greater
+- Java version 1.6 or greater
 - UCSC RefFlat (GenePred table format)
     See: http://genome.ucsc.edu/FAQ/FAQformat.html#format9
 - Reference genome in fasta 
@@ -93,6 +93,18 @@ Working with GFF/GTF format
     
 - First need to convert GFF/GTF to refFlat (genePred) format:
   $ java -jar fusim.jar --convert -i gencode.gtf -o gencodeRefFlat.txt
+
+  ** Memory requirments **
+
+  The GTF-to-Reflat conversion requires RAM equivalent to roughly 4x the size of
+  your GTF file. For example, to convert the 879M gencode.v13.annotation.gtf
+  file requires about ~3.5G of RAM. If you run out of memory with the default
+  JVM settings add the -Xmx flag specifying the amount of RAM needed in
+  megabytes. For example,  879M x 4 = 3516M = ~3.5G
+
+  $ java -Xmx3516m -jar fusim.jar --convert -i gencode.gtf -o gencodeRefFlat.txt
+
+  These are only guidlines and more RAM may be required.
 
 - Then run fusim using the converted refFlat file:
   $ java -jar fusim.jar -g gencodeRefFlat.txt -n 10
