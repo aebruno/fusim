@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -18,6 +18,8 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.buffalo.fusim.gtf.Feature;
 import edu.buffalo.fusim.gtf.FeatureType;
@@ -26,9 +28,10 @@ import edu.buffalo.fusim.gtf.GTFParser;
 import edu.buffalo.fusim.gtf.Strand;
 
 public class GTF2RefFlat {
+    private static Log logger = LogFactory.getLog(GTF2RefFlat.class);
     
     private GTFParser parser = new GTFParser();
-    private Map<String, TranscriptData> map;
+    private Map<String, List<String>> map;
     
     
     /**
@@ -37,12 +40,30 @@ public class GTF2RefFlat {
      * http://genomewiki.cse.ucsc.edu/index.php/Kent_source_utilities
      */
     public void convert(File gtfFile, File outFile) throws IOException {
-        map = new HashMap<String, TranscriptData>();
+        logger.info("Converting GTF File: "+gtfFile.getAbsolutePath());
+        long tstart = System.currentTimeMillis();
+        
+        map = new HashMap<String, List<String>>();
         buildMap(gtfFile);
         PrintWriter output = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8"));
         
         for(String id : map.keySet()) {
-            TranscriptData data = map.get(id);
+            TranscriptData data = null;
+            for(String line : map.get(id)) {
+                Feature feature;
+                try {
+                    feature = parser.parseLine(line);
+                } catch (GTFParseException e) {
+                    logger.fatal("Invalid GTF format. Could not parse line: "+e.getMessage());
+                    continue;
+                }
+                if(data == null) {
+                    data = new TranscriptData(feature.getTranscriptId(), feature.getGeneId(), feature.getSeqname(), feature.getStrand());
+                }
+                
+                data.addFeature(feature);
+            }
+
             Collections.sort(data.getFeatures(), new FeatureCompare());
 
             int exonCount = 0;
@@ -153,6 +174,11 @@ public class GTF2RefFlat {
         }
 
         output.flush();
+        
+        long tend = System.currentTimeMillis();
+        double totalTime = ((tend - tstart)/1000);
+        logger.info("Finished conversion: "+totalTime + "s");
+        logger.info("Output written to: "+outFile.getAbsolutePath());
     }
     
     protected class FeatureCompare implements Comparator<Feature> {
@@ -170,13 +196,13 @@ public class GTF2RefFlat {
                 if (line.startsWith("#")) continue;
                 Feature feature = parser.parseLine(line);
                 
-                TranscriptData data = map.get(feature.getTranscriptId());
-                if(data == null) {
-                    data = new TranscriptData(feature.getTranscriptId(), feature.getGeneId(), feature.getSeqname(), feature.getStrand());
+                List<String> lines = map.get(feature.getTranscriptId());
+                if(lines == null) {
+                    lines = new ArrayList<String>();
                 }
                 
-                data.addFeature(feature);
-                map.put(feature.getTranscriptId(), data);
+                lines.add(line);
+                map.put(feature.getTranscriptId(), lines);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read gene modle file", e);
