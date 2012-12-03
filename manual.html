@@ -11,6 +11,12 @@
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <title>Fusim - a software tool for simulating fusion transcripts</title>
+    <style type="text/css">
+    .dtable { border-collapse: collapse; }
+    .dtable td { border: 1px solid #eee; text-align: left; padding: 5px; }
+    .dhead { background-color: #ccc; color: #444; }
+    .dtable td pre {background:none;color: #6d6d6d; }
+    </style>
   </head>
 
   <body>
@@ -21,6 +27,23 @@
           <h2>a software tool for simulating fusion transcripts</h2>
         </header>
         <section id="main_content">
+          <h1>Introduction</h1>
+          FUSIM is a tool for simulating fusion transcripts. Multiple types of
+          fusion transcripts are supported and based on the number of genes
+          involved per fusion, the fusion types are classified as self, hybrid,
+          complex which involves 1, 2, and 3 genes respectively.  According to
+          chromosome locations and strand, fusion types are classified as CTX
+          (inter-chromosome events), ITX (intra-chromsome events with different
+          strands), DUP (tandem duplication), and DEL (deletion).  Complex
+          chromosomal rearrangements (CCRs) are examples of complex fusions
+          involving at least three breakpoints on two or more chromosomes. Read
+          through events are also supported as a special case of DEL with two
+          adjacent genes on the same strand fused together. See the figure
+          below which shows how fusion transcripts are generated:
+          <div style="text-align: center;padding: 5px;">
+          <img style="border: 1px solid #ccc; margin: 5px;" src="images/fusim-fig1.png" />
+          </div>
+
           <h1>User Guide</h1>
           <h2>Basic Usage</h2>
 <ul>
@@ -55,6 +78,71 @@ $ java -jar fusim.jar \
      --rpkm-cutoff=0.2
 </pre></li>
 </ul>
+
+          <h2>Filtering Options</h2>
+<ul>
+<li>FUSIM has the ability to limit simulated fusion transcript to specific genes or chromosomes of interest. To filter
+simualted transcripts:</li>
+<pre>$ java -jar fusim.jar \
+     --gene-model=refFlat.txt \
+     --fusions=10 \
+     --gene1=BCR \
+     --gene2=ABL1
+</pre></li>
+<li>Filter by multiple genes:</li>
+<pre>$ java -jar fusim.jar \
+     --gene-model=refFlat.txt \
+     --fusions=10 \
+     --gene1=BCR,NPS \
+     --gene2=ABL1,RPL38
+</pre></li>
+</ul>
+          <h2>Gene Selection Options</h2>
+<table class="dtable">
+<tr class="dhead">
+    <td>Mode</td>
+    <td>Method</td>
+    <td>Options</td>
+</tr>
+
+<tr>
+    <td>Random (default)</td>
+    <td>uniform</td>
+    <td><pre>
+-l,--limit                     Limit all fusions to specific geneId, 
+                                   transcriptId, or chrom
+
+-1,--gene1                 Filter for gene1
+
+-2,--gene2                 Filter for gene2
+
+-3,--gene3                 Filter for gene3
+</pre></td>
+</tr>
+<tr>
+    <td>Background</td>
+    <td>uniform<br/>empirical<br/>binned</td>
+    <td><pre>
+-b,--background-reads           Path to BAM file containing
+                                                  background reads. Genes will be
+                                                  selected for fusions according to
+                                                  the read profile of the background reads.
+
+-k,--rpkm-cutoff                RPKM cutoff when using background
+                                            BAM file. Genes below the cutoff
+                                            will be ignored
+
+-m,--gene-selection-method      Method to use when selecting
+                                                     genes for fusions 
+                                                     uniform|empirical|binned
+
+-p,--threads                    Number of threads to spawn when processing 
+                                        background BAM file
+    </pre></td>
+</tr>
+   
+</table>
+
         </section>
 
         <footer>
