@@ -442,6 +442,7 @@ public class Fusim {
                     f.getGene(i).getExons(cmd.hasOption("c")).get(exons[exons.length-1])[1] -= randIndex;
                 }
             } else if(cmd.hasOption("e") && !cmd.hasOption("d")) {
+                breaks.clear();
                 // Keep ORF (don't allow out of frame) and don't allow splitting of exons (keep exon boundries)
                 // Break genes on exons boundries
                 breaks.add(f.getGene(0).generateExonBoundryBreak(cmd.hasOption("c")));
