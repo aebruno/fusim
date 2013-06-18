@@ -2,6 +2,11 @@
 Fusim - ChangeLog
 ================================================================================
 
+-2013-06-18 (v0.2.1)
+
+    - Fix bug when generating fusion breaks on exon bounaries. Breaks were 
+      being double counted causing array index out of bound exception.
+
 -2012-11-27 (v0.2.0)
 
     - Optimized GTF-to-Reflat conversion to use less memory

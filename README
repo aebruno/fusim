@@ -110,6 +110,20 @@ Working with GFF/GTF format
   $ java -jar fusim.jar -g gencodeRefFlat.txt -n 10
 
 -------------------------------------------------------------------------
+Intra-chromosome fusions with Ensemble genome 
+-------------------------------------------------------------------------
+
+The Ensemble genome does not appear to prefix chromosomes with "chr". When
+generation intra-chromosome fusions (-y option) FUSIM assumes this to be the
+case. To generate intra-chromosome fusions using Ensemble simply generate hybrid
+fusions but specify a filter for each gene. For example to generate
+intra-chromosome fusions on chromosome 17 run:
+
+  $ java -jar fusim.jar -g ensemble.refGene -n 5 -t fusions.txt \
+             -r ensemble.fa -f fusions.fasta \
+             --gene1=17 --gene2=17
+
+-------------------------------------------------------------------------
 Authors
 -------------------------------------------------------------------------
 
