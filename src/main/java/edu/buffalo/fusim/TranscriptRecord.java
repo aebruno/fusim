@@ -58,9 +58,9 @@ public class TranscriptRecord {
     }
 
     public static TranscriptRecord fromRefFlat(String[] fields) throws GTFParseException {
-        if (fields.length != 11)
+        if (fields.length < 11)
             throw new RuntimeException(
-                    "Invalid RefGene file. records should have 16 fields but found only: "
+                    "Invalid RefGene file. records should have at least 11 fields but found only: "
                             + fields.length);
         
         TranscriptRecord record = new TranscriptRecord();
