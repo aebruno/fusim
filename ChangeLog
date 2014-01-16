@@ -2,6 +2,10 @@
 Fusim - ChangeLog
 ================================================================================
 
+-2014-01-15 (v0.2.2)
+
+    - Fix bug when parsing refFlat
+
 -2013-06-18 (v0.2.1)
 
     - Fix bug when generating fusion breaks on exon bounaries. Breaks were 
