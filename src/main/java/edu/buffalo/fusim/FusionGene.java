@@ -80,9 +80,14 @@ public class FusionGene {
                          //+" exons"+breakno+"="
                          );
         
+            // Exon indexes are in ascending genomic order. Each minus strand exon is
+            // reverse complemented by fetch(), so walk them in reverse to keep the
+            // exons in transcript order.
+            boolean reverse = Strand.REVERSE.equals(gene.getStrand());
             StringBuffer breakSeq = new StringBuffer();
             for(int i = 0; i < exons.length; i++) {
-                int[] exon = gene.getExons(cdsExonsOnly).get(exons[i]);
+                int j = reverse ? exons.length-1-i : i;
+                int[] exon = gene.getExons(cdsExonsOnly).get(exons[j]);
                 //fasta.append((exon[0]+1)+"-"+exon[1]);
                 //if(i != (exons.length-1)) fasta.append(",");
                 breakSeq.append(extractSeq.fetch(gene.getChrom(), gene.getStrand(), exon[0]+1, exon[1]));
