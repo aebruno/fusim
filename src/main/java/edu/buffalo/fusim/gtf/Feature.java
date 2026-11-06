@@ -72,7 +72,8 @@ public class Feature {
 
     /**
      * start coordinate of the feature relative to the beginning of the
-     * sequence. Numbering is 1 based.
+     * sequence. Numbering is 0 based (the GTF start minus 1), so a feature
+     * covers [start, end) like a refFlat exon.
      * 
      * @return
      */
