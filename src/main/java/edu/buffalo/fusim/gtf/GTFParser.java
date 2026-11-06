@@ -49,7 +49,8 @@ public class GTFParser {
         record.featureType = FeatureType.fromString(fields[2]);
 
         try {
-            record.start = Integer.valueOf(fields[3]);
+            // GTF starts are 1 based, refFlat starts are 0 based
+            record.start = Integer.valueOf(fields[3]) - 1;
         } catch (NumberFormatException e) {
             throw new GTFParseException("Invalid integer value for start", e);
         }
